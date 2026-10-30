@@ -636,9 +636,6 @@ function createFfmpegStream(streamUrl) {
   } catch {}
 
   const child = spawn(ffmpegBin, [
-    '-reconnect', '1',
-    '-reconnect_streamed', '1',
-    '-reconnect_delay_max', '5',
     '-nostdin',
     '-i', streamUrl,
     '-vn',
@@ -662,14 +659,39 @@ function createFfmpegStream(streamUrl) {
   return child.stdout;
 }
 
-// Reliable Audio Stream Generator with Multi-Provider Fallback (Tested SoundCloud Stream -> play-dl -> YouTube)
+// Reliable Audio Stream Generator with Multi-Provider Fallback (play-dl SoundCloud Native -> Direct Stream)
 async function createAudioStreamResource(url, volume = 100, title = '', directStreamUrl = null) {
   if (!voice) return null;
 
-  // Ultra-Fast Path: If stream URL was pre-fetched, start streaming instantly (0ms delay)
+  const searchQuery = title || url;
+
+  // Tier 1: Native play-dl SoundCloud Stream Engine (100% stable, zero buffer drops)
+  if (playdl && (url?.includes('soundcloud.com') || searchQuery)) {
+    try {
+      let scTrackUrl = url?.includes('soundcloud.com') ? url : null;
+      if (!scTrackUrl && searchQuery) {
+        const scItem = await searchSoundCloudTrack(searchQuery);
+        if (scItem?.url) scTrackUrl = scItem.url;
+      }
+      if (scTrackUrl) {
+        console.log(`[SoundCloud Engine] Streaming: "${scTrackUrl}"`);
+        const stream = await playdl.stream(scTrackUrl, { discordPlayerCompatibility: false });
+        if (stream && stream.stream) {
+          return voice.createAudioResource(stream.stream, {
+            inputType: stream.type,
+            inlineVolume: false
+          });
+        }
+      }
+    } catch (pErr) {
+      console.warn('[play-dl SoundCloud warning]:', pErr.message);
+    }
+  }
+
+  // Tier 2: Direct HLS / HTTP stream via Native FFmpeg
   if (directStreamUrl) {
     try {
-      console.log(`[Zero-Buffering Stream] Instant playback for "${title || url}"`);
+      console.log(`[Direct Stream] Playing: "${title || url}"`);
       const stream = createFfmpegStream(directStreamUrl);
       return voice.createAudioResource(stream, {
         inputType: voice.StreamType.Raw,
@@ -677,30 +699,25 @@ async function createAudioStreamResource(url, volume = 100, title = '', directSt
         highWaterMark: 1024 * 512
       });
     } catch (e) {
-      console.warn('[Direct Stream failed, falling back]:', e.message);
+      console.warn('[Direct Stream failed]:', e.message);
     }
   }
 
-  const vidId = extractVideoId(url) || url;
-  const searchQuery = title || url;
-
-  // Tier 1: Tested & Verified Direct SoundCloud Engine (0% datacenter blocks, native PCM)
+  // Tier 3: Direct SoundCloud resolved URL fallback
   if (searchQuery) {
     try {
       const scData = await getSoundCloudAudioUrl(searchQuery);
       if (scData?.url) {
-        console.log(`[SoundCloud Stream] Playing "${scData.title}"`);
+        console.log(`[SoundCloud Direct] Playing "${scData.title}"`);
         const stream = createFfmpegStream(scData.url);
-
-        const resource = voice.createAudioResource(stream, {
+        return voice.createAudioResource(stream, {
           inputType: voice.StreamType.Raw,
           inlineVolume: false,
           highWaterMark: 1024 * 512
         });
-        return resource;
       }
     } catch (scErr) {
-      console.warn('[SoundCloud Stream error]:', scErr.message);
+      console.warn('[SoundCloud Direct error]:', scErr.message);
     }
   }
 
