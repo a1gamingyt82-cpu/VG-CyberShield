@@ -147,14 +147,31 @@ if (require('fs').existsSync(targetSrc)) {
             });
         }
 
-        // Global module paths so dependencies are always found from container & root
+        // 1. Link or share root node_modules so dependencies (discord.js, etc.) are ALWAYS found
         const rootModules = path.join(__dirname, 'node_modules');
+        const localModules = path.join(botDir, 'node_modules');
+        if (fs.existsSync(rootModules)) {
+            if (!fs.existsSync(localModules)) {
+                try {
+                    fs.symlinkSync(rootModules, localModules, 'junction');
+                } catch (symErr) {}
+            } else {
+                const localDjs = path.join(localModules, 'discord.js', 'package.json');
+                if (!fs.existsSync(localDjs)) {
+                    try {
+                        fs.rmSync(localModules, { recursive: true, force: true });
+                        fs.symlinkSync(rootModules, localModules, 'junction');
+                    } catch (e) {}
+                }
+            }
+        }
+
         const cwdModules = path.join(process.cwd(), 'node_modules');
         const globalNodeModules = [
-            path.join(botDir, 'node_modules'),
-            path.join(this.sandbox.baseStorageDir, 'bot-mvu4vwnf-mkkl', 'node_modules'),
             rootModules,
             cwdModules,
+            path.join(botDir, 'node_modules'),
+            path.join(this.sandbox.baseStorageDir, 'bot-mvu4vwnf-mkkl', 'node_modules'),
             process.env.NODE_PATH || ''
         ].filter(Boolean).join(path.delimiter);
 
