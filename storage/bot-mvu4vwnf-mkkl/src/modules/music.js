@@ -727,50 +727,6 @@ async function getSCClientId() {
   return 'xk6BGxLCsQJ5Ss0bH6sRdsZhts3gTNaU';
 }
 
-function fetchJsonHttps(url, maxRedirects = 4) {
-  return new Promise((resolve) => {
-    if (!url || maxRedirects < 0) return resolve(null);
-    try {
-      const u = new URL(url);
-      const reqLib = u.protocol === 'http:' ? require('http') : https;
-      const options = {
-        hostname: u.hostname,
-        port: u.port || (u.protocol === 'http:' ? 80 : 443),
-        path: u.pathname + u.search,
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'application/json, text/plain, */*',
-          'Accept-Language': 'en-US,en;q=0.9,hi;q=0.8',
-          'Cookie': 'L=hindi%2Cbhojpuri%2Cpunjabi%2Cenglish; gdpr_acceptance=true; DL=english'
-        },
-        timeout: 9000
-      };
-
-      const req = reqLib.request(options, (res) => {
-        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
-          const redirectUrl = new URL(res.headers.location, url).href;
-          return resolve(fetchJsonHttps(redirectUrl, maxRedirects - 1));
-        }
-        if (res.statusCode < 200 || res.statusCode >= 400) {
-          return resolve(null);
-        }
-        let d = '';
-        res.on('data', c => d += c);
-        res.on('end', () => {
-          try { resolve(JSON.parse(d)); } catch { resolve(null); }
-        });
-      });
-
-      req.on('timeout', () => { req.destroy(); resolve(null); });
-      req.on('error', () => resolve(null));
-      req.end();
-    } catch {
-      resolve(null);
-    }
-  });
-}
-
 const BASS_AUDIO_FILTER = 'equalizer=f=60:width_type=o:width=1.5:gain=5.0,equalizer=f=120:width_type=o:width=1.2:gain=3.5,volume=1.3,alimiter=limit=0.98';
 
 function cleanTitleForSearch(title) {
