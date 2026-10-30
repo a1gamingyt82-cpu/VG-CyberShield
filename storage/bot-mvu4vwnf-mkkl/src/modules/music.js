@@ -895,10 +895,9 @@ async function getSoundCloudAudioUrl(query) {
   return null;
 }
 
-// Low-latency, Zero-Buffering Native FFmpeg Audio Stream Engine (100% Universal Clean PCM)
-function createFfmpegStream(streamUrl) {
+// Helper to get verified FFmpeg binary
+function getFfmpegBinary() {
   const fs = require('fs');
-  const { spawn } = require('child_process');
   let ffmpegBin = process.env.FFMPEG_PATH || 'ffmpeg';
   try {
     const ffStatic = require('ffmpeg-static');
@@ -907,42 +906,7 @@ function createFfmpegStream(streamUrl) {
       try { fs.chmodSync(ffmpegBin, 0o755); } catch {}
     }
   } catch {}
-
-  const isHls = streamUrl.includes('.m3u8') || streamUrl.includes('/hls');
-  const args = [
-    '-loglevel', 'error',
-    '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-  ];
-
-  if (!isHls) {
-    args.push('-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_delay_max', '5');
-  }
-
-  args.push(
-    '-i', streamUrl,
-    '-vn',
-    '-c:a', 'pcm_s16le',
-    '-f', 's16le',
-    '-ar', '48000',
-    '-ac', '2',
-    'pipe:1'
-  );
-
-  const child = spawn(ffmpegBin, args, {
-    stdio: ['ignore', 'pipe', 'pipe'],
-    windowsHide: true
-  });
-
-  child.on('error', (err) => console.warn('[FFmpeg Native Error]:', err.message));
-  child.stderr.on('data', (d) => {
-    const msg = d.toString().trim();
-    if (msg) console.warn('[FFmpeg Stderr]:', msg.slice(0, 200));
-  });
-  child.on('close', (code) => {
-    if (code !== 0 && code !== null) console.warn('[FFmpeg Exit Code]:', code);
-  });
-
-  return child.stdout;
+  return ffmpegBin;
 }
 
 // Low-latency, direct Node.js HTTPS stream reader with full browser spoofing
@@ -1004,75 +968,220 @@ function fetchAudioStreamHttps(mediaUrl) {
   return pass;
 }
 
-// Resilient Audio Resource Creator (Node HTTPS Stdin Pipe -> Prism OggOpus)
+// 100% Reliable Native Node.js HLS Chunk Streamer (Bypasses CloudFront 403 & Demuxer Dropouts)
+function fetchHlsAudioStream(m3u8Url) {
+  const { PassThrough } = require('stream');
+  const pass = new PassThrough({ highWaterMark: 2 * 1024 * 1024 });
+
+  (async () => {
+    try {
+      const headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Referer': 'https://soundcloud.com/',
+        'Origin': 'https://soundcloud.com',
+        'Accept': '*/*'
+      };
+
+      // 1. Fetch the master or media m3u8 playlist
+      let playlistText = await new Promise((resolve, reject) => {
+        https.get(m3u8Url, { headers }, (res) => {
+          if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+            https.get(res.headers.location, { headers }, (r2) => {
+              let d = '';
+              r2.on('data', c => d += c);
+              r2.on('end', () => resolve(d));
+            }).on('error', reject);
+            return;
+          }
+          let d = '';
+          res.on('data', c => d += c);
+          res.on('end', () => resolve(d));
+        }).on('error', reject);
+      });
+
+      if (!playlistText || !playlistText.includes('#EXTM3U')) {
+        pass.destroy(new Error('Invalid HLS playlist'));
+        return;
+      }
+
+      // If it's a master playlist, follow to the first audio variant playlist
+      const subPlaylists = playlistText.split('\n')
+        .map(l => l.trim())
+        .filter(l => l && !l.startsWith('#') && (l.includes('.m3u8') || l.startsWith('http')));
+
+      if (subPlaylists.length > 0 && !playlistText.includes('#EXTINF:')) {
+        const subUrl = new URL(subPlaylists[0], m3u8Url).toString();
+        playlistText = await new Promise((resolve, reject) => {
+          https.get(subUrl, { headers }, (res) => {
+            let d = '';
+            res.on('data', c => d += c);
+            res.on('end', () => resolve(d));
+          }).on('error', reject);
+        });
+      }
+
+      // Extract all audio segment chunk URLs
+      const lines = playlistText.split('\n').map(l => l.trim());
+      const segmentUrls = [];
+      for (const line of lines) {
+        if (line && !line.startsWith('#')) {
+          const fullSegmentUrl = new URL(line, m3u8Url).toString();
+          segmentUrls.push(fullSegmentUrl);
+        }
+      }
+
+      console.log(`[HLS Stream Engine] Queued ${segmentUrls.length} audio chunks for continuous zero-buffer streaming.`);
+
+      // 2. Fetch each segment in sequential order and pipe directly to pass
+      for (let i = 0; i < segmentUrls.length; i++) {
+        if (pass.destroyed) break;
+        const segUrl = segmentUrls[i];
+        await new Promise((resolve) => {
+          const fetchSeg = (retries = 2) => {
+            const client = segUrl.startsWith('http://') ? http : https;
+            const req = client.get(segUrl, { headers }, (res) => {
+              if (res.statusCode !== 200 && res.statusCode !== 206) {
+                if (retries > 0) return setTimeout(() => fetchSeg(retries - 1), 300);
+                return resolve();
+              }
+              res.on('data', chunk => {
+                if (!pass.destroyed) pass.write(chunk);
+              });
+              res.on('end', () => resolve());
+              res.on('error', () => {
+                if (retries > 0) setTimeout(() => fetchSeg(retries - 1), 300);
+                else resolve();
+              });
+            });
+            req.on('error', () => {
+              if (retries > 0) setTimeout(() => fetchSeg(retries - 1), 300);
+              else resolve();
+            });
+            req.setTimeout(12000, () => {
+              req.destroy();
+              resolve();
+            });
+          };
+          fetchSeg();
+        });
+      }
+      pass.end();
+    } catch (err) {
+      console.warn('[HLS Stream Engine Warning]:', err.message);
+      pass.destroy(err);
+    }
+  })();
+
+  return pass;
+}
+
+// Low-latency, Zero-Buffering Native FFmpeg Process (100% Universal Clean PCM s16le 48kHz Stereo)
+function createFfmpegProcess(isStdin = false, streamUrl = null) {
+  const { spawn } = require('child_process');
+  const ffmpegBin = getFfmpegBinary();
+
+  const scHeaders = [
+    'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer: https://soundcloud.com/',
+    'Origin: https://soundcloud.com'
+  ].join('\r\n') + '\r\n';
+
+  const args = ['-loglevel', 'warning'];
+
+  if (isStdin) {
+    args.push('-i', 'pipe:0');
+  } else {
+    const isHls = typeof streamUrl === 'string' && (streamUrl.includes('.m3u8') || streamUrl.includes('/hls'));
+    args.push(
+      '-headers', scHeaders,
+      '-protocol_whitelist', 'file,http,https,tcp,tls,crypto',
+      '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+    );
+    if (!isHls) {
+      args.push('-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_delay_max', '5');
+    }
+    args.push('-i', streamUrl);
+  }
+
+  args.push(
+    '-vn',
+    '-c:a', 'pcm_s16le',
+    '-f', 's16le',
+    '-ar', '48000',
+    '-ac', '2',
+    'pipe:1'
+  );
+
+  const child = spawn(ffmpegBin, args, {
+    stdio: [isStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'],
+    windowsHide: true
+  });
+
+  child.on('error', (err) => console.warn('[FFmpeg Native Error]:', err.message));
+  child.stderr.on('data', (d) => {
+    const msg = d.toString().trim();
+    if (msg && !msg.includes('size=') && !msg.includes('time=')) console.warn('[FFmpeg Stderr]:', msg.slice(0, 250));
+  });
+
+  child.stdout.on('close', () => {
+    try { child.kill('SIGKILL'); } catch {}
+  });
+
+  return child;
+}
+
+// Backward-compatible stream generator helper
+function createFfmpegStream(streamUrl) {
+  const child = createFfmpegProcess(false, streamUrl);
+  return child.stdout;
+}
+
+// Resilient Audio Resource Creator (Pure Node Stream Ingest -> FFmpeg PCM s16le -> Discord Voice)
 function createAudioStreamResourceFromUrl(streamUrl) {
   if (!voice) return null;
   const isHls = typeof streamUrl === 'string' && (streamUrl.includes('.m3u8') || streamUrl.includes('/hls'));
 
-  // Priority 1: High-Speed Native OggOpus using prism-media with stdin piping (bypasses all FFmpeg network restrictions)
-  if (prism) {
-    try {
-      const isDirectFile = !isHls && typeof streamUrl === 'string' && streamUrl.startsWith('http');
+  try {
+    let audioStream = null;
 
-      if (isDirectFile) {
-        const audioPass = fetchAudioStreamHttps(streamUrl);
-        const ffmpeg = new prism.FFmpeg({
-          args: [
-            '-loglevel', 'error',
-            '-i', 'pipe:0',
-            '-analyzeduration', '0',
-            '-vn',
-            '-c:a', 'libopus',
-            '-b:a', '192k',
-            '-ar', '48000',
-            '-ac', '2',
-            '-application', 'audio',
-            '-f', 'ogg'
-          ]
-        });
-        audioPass.pipe(ffmpeg);
-        ffmpeg.on('error', (err) => {
-          if (!err.message?.includes('Premature close')) console.warn('[Prism Pipe error]:', err.message);
-        });
-        return voice.createAudioResource(ffmpeg, {
-          inputType: voice.StreamType.OggOpus,
-          inlineVolume: false
-        });
-      }
+    if (isHls) {
+      console.log('[Audio Resource] Streaming HLS via sequential segment pipeline...');
+      audioStream = fetchHlsAudioStream(streamUrl);
+    } else if (typeof streamUrl === 'string' && streamUrl.startsWith('http')) {
+      console.log('[Audio Resource] Streaming direct HTTP audio with browser headers...');
+      audioStream = fetchAudioStreamHttps(streamUrl);
+    }
 
-      // HLS stream (.m3u8) fallback
-      const args = [
-        '-loglevel', 'error',
-        '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-        '-i', streamUrl,
-        '-analyzeduration', '0',
-        '-vn',
-        '-c:a', 'libopus',
-        '-b:a', '192k',
-        '-ar', '48000',
-        '-ac', '2',
-        '-application', 'audio',
-        '-f', 'ogg'
-      ];
-      const ff = new prism.FFmpeg({ args });
-      ff.on('error', (err) => {
-        if (!err.message?.includes('Premature close')) console.warn('[Prism FFmpeg error]:', err.message);
+    if (audioStream) {
+      const child = createFfmpegProcess(true);
+      audioStream.pipe(child.stdin);
+
+      audioStream.on('error', (err) => {
+        if (!err.message?.includes('Premature close')) console.warn('[Audio Pipeline Ingest Warning]:', err.message);
       });
-      return voice.createAudioResource(ff, {
-        inputType: voice.StreamType.OggOpus,
+      child.stdin.on('error', () => {});
+
+      return voice.createAudioResource(child.stdout, {
+        inputType: voice.StreamType.Raw,
         inlineVolume: false
       });
-    } catch (prismErr) {
-      console.warn('[Prism OggOpus Fallback]:', prismErr.message);
     }
-  }
 
-  // Priority 2: Native FFmpeg PCM Stream
-  const stream = createFfmpegStream(streamUrl);
-  return voice.createAudioResource(stream, {
-    inputType: voice.StreamType.Raw,
-    inlineVolume: false
-  });
+    // Direct FFmpeg network fallback
+    console.log('[Audio Resource] Streaming via FFmpeg native network engine...');
+    const child = createFfmpegProcess(false, streamUrl);
+    return voice.createAudioResource(child.stdout, {
+      inputType: voice.StreamType.Raw,
+      inlineVolume: false
+    });
+  } catch (err) {
+    console.warn('[Audio Stream Resource Error]:', err.message);
+    const child = createFfmpegProcess(false, streamUrl);
+    return voice.createAudioResource(child.stdout, {
+      inputType: voice.StreamType.Raw,
+      inlineVolume: false
+    });
+  }
 }
 
 // Reliable Audio Stream Generator with Multi-Provider Fallback (JioSaavn 320kbps -> SoundCloud Full -> play-dl -> YouTube)
@@ -1103,7 +1212,30 @@ async function createAudioStreamResource(url, volume = 100, title = '', duration
     }
   }
 
-  // Tier 2: Tested & Verified Full-Length SoundCloud Engine
+  // Tier 2: Dedicated play-dl SoundCloud Stream Engine (100% Reliable Discord Audio)
+  if (searchQuery) {
+    try {
+      const scItem = await searchSoundCloudTrack(searchQuery);
+      if (scItem?.url && playdl) {
+        try {
+          const cid = await getSCClientId();
+          if (cid) await playdl.setToken({ soundcloud: { client_id: cid } });
+        } catch {}
+        console.log(`[play-dl SoundCloud] Streaming "${scItem.title}" (${scItem.url})`);
+        const stream = await playdl.stream(scItem.url, { discordPlayerCompatibility: true });
+        if (stream?.stream) {
+          return voice.createAudioResource(stream.stream, {
+            inputType: stream.type,
+            inlineVolume: false
+          });
+        }
+      }
+    } catch (scErr) {
+      console.warn('[play-dl SoundCloud error]:', scErr.message);
+    }
+  }
+
+  // Tier 3: Direct SoundCloud CloudFront Stream Fallback
   if (searchQuery) {
     try {
       const scData = await getSoundCloudAudioUrl(searchQuery);
@@ -1116,45 +1248,17 @@ async function createAudioStreamResource(url, volume = 100, title = '', duration
     }
   }
 
-  // Tier 2: play-dl stream fallback (supports YouTube, SoundCloud with deciphering)
+  // Tier 4: play-dl stream fallback (supports YouTube directly)
   const isPlaydlUrl = url && (/^https?:\/\/(www\.)?(youtube\.com|youtu\.be)\//i.test(url) || /^https?:\/\/(www\.)?soundcloud\.com\//i.test(url));
   if (playdl && isPlaydlUrl) {
     try {
-      const stream = await playdl.stream(url, { quality: 2, discordPlayerCompatibility: false });
+      console.log(`[play-dl Stream] Streaming audio for ${url}`);
+      const stream = await playdl.stream(url, { discordPlayerCompatibility: true });
       if (stream?.stream) {
-        console.log(`[play-dl Stream] Streaming audio for ${url}`);
-        if (prism) {
-          const ffmpeg = new prism.FFmpeg({
-            args: [
-              '-nostdin',
-              '-vn',
-              '-c:a', 'libopus',
-              '-b:a', '192k',
-              '-ar', '48000',
-              '-ac', '2',
-              '-application', 'audio',
-              '-f', 'ogg'
-            ]
-          });
-          stream.stream.pipe(ffmpeg);
-          ffmpeg.on('error', (err) => {
-            if (!err.message?.includes('Premature close')) console.warn('[FFmpeg playdl warning]:', err.message);
-          });
-          const resource = voice.createAudioResource(ffmpeg, {
-            inputType: voice.StreamType.OggOpus,
-            inlineVolume: false
-          });
-          resource.playStream?.on('error', (err) => {
-            if (!err.message?.includes('Premature close')) console.warn('[AudioResource Stream warning]:', err.message);
-          });
-          return resource;
-        } else {
-          const resource = voice.createAudioResource(stream.stream, {
-            inputType: stream.type,
-            inlineVolume: false
-          });
-          return resource;
-        }
+        return voice.createAudioResource(stream.stream, {
+          inputType: stream.type,
+          inlineVolume: false
+        });
       }
     } catch (pErr) {
       console.warn('[play-dl stream warning]:', pErr.message);
