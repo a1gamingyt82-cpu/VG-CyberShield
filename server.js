@@ -153,7 +153,7 @@ const server = http.createServer(async (req, res) => {
                     supervisor.appendLog(botId, `container@bot-hosting:~$ 📦 Unpacking zip archive "${file.name}"...`);
                     const extractCmd = process.platform === 'win32'
                         ? `powershell -NoProfile -Command "Expand-Archive -Path '${safePath}' -DestinationPath '${botDir}' -Force"`
-                        : `unzip -o "${safePath}" -d "${botDir}"`;
+                        : `(unzip -o "${safePath}" -d "${botDir}" || python3 -m zipfile -e "${safePath}" "${botDir}")`;
 
                     exec(extractCmd, (zipErr) => {
                         if (zipErr) {
