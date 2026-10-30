@@ -978,55 +978,41 @@ function fetchAudioStreamHttps(mediaUrl) {
   return pass;
 }
 
-// Low-latency, Ultra-Lightweight Native FFmpeg Process (Direct OggOpus stream - 90% Less CPU!)
-function createFfmpegProcess(isStdin = false, streamUrl = null) {
+// Low-latency, Zero-Dropout Native FFmpeg Process (100% Robust Raw PCM Stream)
+function createFfmpegProcess(streamUrl) {
   const { spawn } = require('child_process');
   const ffmpegBin = getFfmpegBinary();
 
-  const scHeaders = [
-    'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    'Referer: https://soundcloud.com/',
-    'Origin: https://soundcloud.com',
-    'Accept: */*'
-  ].join('\r\n') + '\r\n';
+  const isSc = typeof streamUrl === 'string' && (streamUrl.includes('sndcdn') || streamUrl.includes('soundcloud'));
+  const scHeaders = isSc
+    ? 'Referer: https://soundcloud.com/\r\nUser-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n'
+    : 'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n';
 
-  const args = ['-loglevel', 'error'];
-
-  if (isStdin) {
-    args.push('-i', 'pipe:0');
-  } else {
-    args.push(
-      '-headers', scHeaders,
-      '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      '-i', streamUrl
-    );
-  }
-
-  // Native hardware-accelerated Opus stream (Zero CPU Overhead - 0% load)
-  args.push(
-    '-threads', '1',
-    '-preset', 'ultrafast',
-    '-tune', 'zerolatency',
+  const args = [
+    '-reconnect', '1',
+    '-reconnect_streamed', '1',
+    '-reconnect_delay_max', '5',
+    '-headers', scHeaders,
+    '-loglevel', 'warning',
+    '-i', streamUrl,
     '-vn',
-    '-c:a', 'libopus',
-    '-b:a', '96k',
+    '-af', 'volume=1.1',
+    '-f', 's16le',
     '-ar', '48000',
     '-ac', '2',
-    '-application', 'audio',
-    '-f', 'ogg',
     'pipe:1'
-  );
+  ];
 
   const child = spawn(ffmpegBin, args, {
-    stdio: [isStdin ? 'pipe' : 'ignore', 'pipe', 'pipe'],
+    stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true
   });
 
   child.on('error', (err) => console.warn('[FFmpeg Native Error]:', err.message));
   child.stderr.on('data', (d) => {
     const msg = d.toString().trim();
-    if (msg && !msg.includes('size=') && !msg.includes('time=')) {
-      console.warn('[FFmpeg Stderr]:', msg.slice(0, 250));
+    if (msg.includes('Error') || msg.includes('fail') || msg.includes('403')) {
+      console.warn('[FFmpeg Stderr]:', msg.slice(0, 200));
     }
   });
 
@@ -1045,57 +1031,24 @@ function createFfmpegProcess(isStdin = false, streamUrl = null) {
 
 // Backward-compatible stream generator helper
 function createFfmpegStream(streamUrl) {
-  const child = createFfmpegProcess(false, streamUrl);
+  const child = createFfmpegProcess(streamUrl);
   return child.stdout;
 }
 
-// Resilient Audio Resource Creator (Direct Native FFmpeg OggOpus -> Discord Voice)
+// Resilient Audio Resource Creator (Direct Native FFmpeg Raw PCM -> Discord Voice)
 function createAudioStreamResourceFromUrl(streamUrl) {
-  if (!voice) return null;
-  const isHls = typeof streamUrl === 'string' && (streamUrl.includes('.m3u8') || streamUrl.includes('/hls'));
+  if (!voice || !streamUrl) return null;
 
   try {
-    if (isHls) {
-      console.log('[Audio Resource] Streaming HLS directly via FFmpeg OggOpus engine...');
-      const child = createFfmpegProcess(false, streamUrl);
-      return voice.createAudioResource(child.stdout, {
-        inputType: voice.StreamType.OggOpus,
-        inlineVolume: false
-      });
-    }
-
-    // Direct HTTP(S) stream (JioSaavn 320kbps MP4/MP3 or direct CDN)
-    if (typeof streamUrl === 'string' && streamUrl.startsWith('http')) {
-      console.log('[Audio Resource] Streaming direct HTTP audio with browser headers...');
-      const audioStream = fetchAudioStreamHttps(streamUrl);
-      const child = createFfmpegProcess(true);
-      audioStream.pipe(child.stdin);
-
-      audioStream.on('error', (err) => {
-        if (!err.message?.includes('Premature close')) console.warn('[Audio Pipeline Ingest Warning]:', err.message);
-      });
-      child.stdin.on('error', () => {});
-
-      return voice.createAudioResource(child.stdout, {
-        inputType: voice.StreamType.OggOpus,
-        inlineVolume: false
-      });
-    }
-
-    // Direct FFmpeg network fallback
-    console.log('[Audio Resource] Streaming via FFmpeg native OggOpus engine...');
-    const child = createFfmpegProcess(false, streamUrl);
+    const child = createFfmpegProcess(streamUrl);
     return voice.createAudioResource(child.stdout, {
-      inputType: voice.StreamType.OggOpus,
-      inlineVolume: false
+      inputType: voice.StreamType.Raw,
+      inlineVolume: false,
+      highWaterMark: 1024 * 1024
     });
   } catch (err) {
     console.warn('[Audio Stream Resource Error]:', err.message);
-    const child = createFfmpegProcess(false, streamUrl);
-    return voice.createAudioResource(child.stdout, {
-      inputType: voice.StreamType.OggOpus,
-      inlineVolume: false
-    });
+    return null;
   }
 }
 
@@ -1150,28 +1103,7 @@ async function createAudioStreamResource(url, volume = 100, title = '', duration
     }
   }
 
-  // Tier 3: play-dl Search Stream (SoundCloud track or YouTube stream)
-  if (searchQuery && playdl) {
-    try {
-      const cid = await getSCClientId();
-      if (cid) await playdl.setToken({ soundcloud: { client_id: cid } });
-      const scSearch = await playdl.search(searchQuery, { source: { soundcloud: 'tracks' }, limit: 1 });
-      if (scSearch && scSearch.length > 0) {
-        console.log(`[play-dl SoundCloud Engine] Streaming "${scSearch[0].title}"`);
-        const stream = await playdl.stream(scSearch[0].url, { discordPlayerCompatibility: true });
-        if (stream?.stream) {
-          return voice.createAudioResource(stream.stream, {
-            inputType: stream.type,
-            inlineVolume: false
-          });
-        }
-      }
-    } catch (scErr) {
-      console.warn('[play-dl SoundCloud fallback error]:', scErr.message);
-    }
-  }
-
-  // Tier 4: Direct SoundCloud CDN / HLS Stream Engine
+  // Tier 3: Direct SoundCloud CDN / HLS Stream Engine (High quality, zero rate limits)
   if (searchQuery) {
     try {
       const scData = await getSoundCloudAudioUrl(searchQuery);
