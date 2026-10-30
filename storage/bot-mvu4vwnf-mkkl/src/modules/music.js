@@ -97,8 +97,14 @@ try {
 
   if (ffmpegStatic && fs.existsSync(ffmpegStatic)) {
     try { fs.chmodSync(ffmpegStatic, 0o755); } catch {}
-    process.env.FFMPEG_PATH = ffmpegStatic;
-    console.log('✅ [FFmpeg Guard] FFmpeg engine ready:', ffmpegStatic);
+    try {
+      execSync(`"${ffmpegStatic}" -version`, { stdio: 'ignore' });
+      process.env.FFMPEG_PATH = ffmpegStatic;
+      console.log('✅ [FFmpeg Guard] FFmpeg engine verified & ready:', ffmpegStatic);
+    } catch (binErr) {
+      console.warn('⚠️ [FFmpeg Guard] ffmpeg-static binary not runnable:', binErr.message, '-> falling back to system ffmpeg');
+      delete process.env.FFMPEG_PATH;
+    }
   }
 } catch (e) {}
 let chooseFormatFn = null;
@@ -337,7 +343,7 @@ function decryptJioSaavnMediaUrl(encUrl) {
 // Search JioSaavn API for 320kbps lossless Indian & International tracks
 async function searchJioSaavnTrack(query) {
   if (!query) return null;
-  const cleanQ = query.replace(/[#\[\]\(\)]/g, ' ').replace(/\s+/g, ' ').trim();
+  const cleanQ = cleanTitleForSearch(query) || query.replace(/[#\[\]\(\)]/g, ' ').replace(/\s+/g, ' ').trim();
 
   // Tier 1: saavn.dev high-speed REST API (returns direct 320kbps download links)
   try {
