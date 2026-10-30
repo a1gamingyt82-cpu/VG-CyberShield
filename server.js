@@ -99,14 +99,20 @@ const server = http.createServer(async (req, res) => {
             const botDir = sandbox.resolveSafePath(botId);
             const envPath = path.join(botDir, '.env');
 
-            let envContent = `DISCORD_TOKEN=${token}\nBOT_PREFIX=!\n`;
+            let envContent = `TOKEN=${token}\nDISCORD_TOKEN=${token}\nBOT_PREFIX=.\n`;
             if (fs.existsSync(envPath)) {
                 let existing = fs.readFileSync(envPath, 'utf8');
-                if (existing.includes('DISCORD_TOKEN=')) {
-                    envContent = existing.replace(/DISCORD_TOKEN=.*/g, `DISCORD_TOKEN=${token}`);
+                if (existing.includes('TOKEN=')) {
+                    existing = existing.replace(/^TOKEN=.*/gm, `TOKEN=${token}`);
                 } else {
-                    envContent = existing + `\nDISCORD_TOKEN=${token}\n`;
+                    existing += `\nTOKEN=${token}\n`;
                 }
+                if (existing.includes('DISCORD_TOKEN=')) {
+                    existing = existing.replace(/^DISCORD_TOKEN=.*/gm, `DISCORD_TOKEN=${token}`);
+                } else {
+                    existing += `\nDISCORD_TOKEN=${token}\n`;
+                }
+                envContent = existing;
             }
             fs.writeFileSync(envPath, envContent, 'utf8');
             supervisor.appendLog(botId, `container@bot-hosting:~$ 🔑 Discord Token saved to .env! Re-connecting to Discord Gateway...`);

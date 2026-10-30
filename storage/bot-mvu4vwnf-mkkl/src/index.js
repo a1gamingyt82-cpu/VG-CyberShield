@@ -823,17 +823,19 @@ try {
 
 // Clean Primary Bot Connection & Fallback Management (Single-Session Protected)
 (async () => {
-  let primaryToken = process.env.TOKEN;
   let loggedInToken = null;
 
-  // Try Primary Token first
-  if (primaryToken && primaryToken.length > 30 && !primaryToken.includes('PASTE')) {
+  // Try DISCORD_TOKEN first (from web dashboard Set Token), then TOKEN from .env
+  const primaryCandidates = [process.env.DISCORD_TOKEN, process.env.TOKEN].filter(t => t && t.length > 30 && !t.includes('PASTE'));
+  
+  for (const tokenCandidate of primaryCandidates) {
+    if (loggedInToken) break;
     try {
-      await client.login(primaryToken);
-      loggedInToken = primaryToken;
-      console.log('✅ [Primary Bot] Connected with TOKEN to Discord Gateway!');
+      await client.login(tokenCandidate);
+      loggedInToken = tokenCandidate;
+      console.log('✅ [Primary Bot] Connected with Primary TOKEN to Discord Gateway!');
     } catch (err) {
-      console.warn(`⚠️ [Primary Token Invalid]: ${err.message}`);
+      console.warn(`⚠️ [Primary Token Try Fail]: ${err.message}`);
     }
   }
 
@@ -849,7 +851,7 @@ try {
   }
 
   // ONLY launch watchdog if primary token logged in AND backup token is a DIFFERENT valid token!
-  if (loggedInToken && loggedInToken === primaryToken && process.env.BACKUP_TOKEN && process.env.BACKUP_TOKEN !== primaryToken) {
+  if (loggedInToken && primaryCandidates.includes(loggedInToken) && process.env.BACKUP_TOKEN && process.env.BACKUP_TOKEN !== loggedInToken) {
     try {
       const watchdog = new Client({
         intents: [
