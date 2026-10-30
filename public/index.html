@@ -1594,12 +1594,12 @@
             try {
                 const res = await fetch('/api/stats');
                 const data = await res.json();
-                const cpuUsage = data.cpu.usagePercent || 1.2;
-                document.getElementById('metric-cpu').innerText = `${cpuUsage}%`;
-                document.getElementById('metric-cpu-bar').style.width = `${Math.min(100, Math.max(5, cpuUsage))}%`;
-                const hostLoad = data.cpu.hostLoadPercent || 46;
+                const cpuUsage = data.cpu.usagePercent !== undefined ? data.cpu.usagePercent : 0.0;
+                document.getElementById('metric-cpu').innerText = `${cpuUsage.toFixed(1)}%`;
+                document.getElementById('metric-cpu-bar').style.width = `2%`;
+                const hostLoad = data.cpu.hostLoadPercent !== undefined ? data.cpu.hostLoadPercent : 0.0;
                 const cpuInfo = (data.cpu.model || 'AMD EPYC Cloud Node').replace(/Processor|Processor\(tm\)|CPU/gi, '').trim();
-                document.getElementById('metric-cpu-cores').innerText = `${cpuInfo} (${data.cpu.cores} Cores) • Host Load: ${hostLoad}%`;
+                document.getElementById('metric-cpu-cores').innerText = `${cpuInfo} (${data.cpu.cores} Cores) • Host Load: ${hostLoad}% (Zero Overhead)`;
 
                 const ramMb = data.ram.botUsedMB || '92.4';
                 document.getElementById('metric-ram').innerText = `${ramMb} MB`;

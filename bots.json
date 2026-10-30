@@ -6,9 +6,9 @@
     "language": "nodejs",
     "entryFile": "index.js",
     "env": {},
-    "autoRestart247": false,
+    "autoRestart247": true,
     "unlimitedHardware": true,
-    "status": "stopped",
+    "status": "online",
     "restartCount": 0,
     "createdAt": "2026-10-29T22:47:34.924Z",
     "lastStarted": "2026-10-29T23:51:33.365Z"

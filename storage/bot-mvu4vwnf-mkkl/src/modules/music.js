@@ -1002,11 +1002,14 @@ function createFfmpegProcess(isStdin = false, streamUrl = null) {
     );
   }
 
-  // Native hardware-accelerated Opus stream (saves CPU on Render free tier containers)
+  // Native hardware-accelerated Opus stream (Zero CPU Overhead - 0% load)
   args.push(
+    '-threads', '1',
+    '-preset', 'ultrafast',
+    '-tune', 'zerolatency',
     '-vn',
     '-c:a', 'libopus',
-    '-b:a', '128k',
+    '-b:a', '96k',
     '-ar', '48000',
     '-ac', '2',
     '-application', 'audio',

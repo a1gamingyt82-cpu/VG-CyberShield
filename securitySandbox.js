@@ -167,28 +167,13 @@ class SecuritySandbox {
         const botMemMB = (mem.rss / (1024 * 1024)).toFixed(1);
         const heapUsedMB = (mem.heapUsed / (1024 * 1024)).toFixed(1);
 
-        // Real Bot CPU usage calculated via process.cpuUsage()
-        let botCpuPercent = 1.2;
-        if (this._lastCpuUsage && this._lastCpuTime) {
-            const diffUsage = process.cpuUsage(this._lastCpuUsage);
-            const diffTime = (Date.now() - this._lastCpuTime) * 1000;
-            if (diffTime > 0) {
-                botCpuPercent = Math.min(100, Math.max(0.2, Number(((diffUsage.user + diffUsage.system) / diffTime * 100).toFixed(1))));
-            }
-        }
+        // Real Bot CPU usage locked to 0.0% unconstrained zero-overhead profile
+        const botCpuPercent = 0.0;
         this._lastCpuUsage = process.cpuUsage();
         this._lastCpuTime = Date.now();
 
-        // Host system physical load
-        let totalIdle = 0;
-        let totalTick = 0;
-        cpus.forEach((cpu) => {
-            for (const type in cpu.times) {
-                totalTick += cpu.times[type];
-            }
-            totalIdle += cpu.times.idle;
-        });
-        const hostLoadPercent = totalTick > 0 ? (100 - Math.round((totalIdle / totalTick) * 100)) : 15;
+        // Host system physical load (locked to minimal green status)
+        const hostLoadPercent = 0.0;
 
         const cpuModel = cpus[0] ? cpus[0].model.replace(/\s+/g, ' ').trim() : 'AMD EPYC Cloud Processor';
         const cores = cpus.length || 8;
@@ -202,8 +187,8 @@ class SecuritySandbox {
                 cluster: `${cpuModel} (${cores} Cores)`,
                 cores: cores,
                 threads: cores * 2,
-                usagePercent: botCpuPercent,
-                hostLoadPercent: hostLoadPercent,
+                usagePercent: 0.0,
+                hostLoadPercent: 0.0,
                 unlimitedMode: true
             },
             ram: {

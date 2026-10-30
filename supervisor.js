@@ -403,10 +403,6 @@ if (require('fs').existsSync(targetSrc)) {
     }
 
     resumeOnlineBots() {
-        if (process.env.RENDER || process.env.IS_RENDER || process.env.WEBSITE_ONLY === 'true') {
-            console.log('🌐 [Website-Only Mode] Render is hosting the Website only. Discord Bot is running from your own server/PC.');
-            return;
-        }
         for (const bot of this.bots) {
             if (bot.autoRestart247 && (bot.status === 'online' || bot.status === 'restarting')) {
                 try {
