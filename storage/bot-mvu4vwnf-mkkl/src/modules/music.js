@@ -939,6 +939,53 @@ function createFfmpegStream(streamUrl) {
   return child.stdout;
 }
 
+// Resilient Audio Resource Creator (Prism OggOpus First -> Raw PCM Fallback)
+function createAudioStreamResourceFromUrl(streamUrl) {
+  if (!voice) return null;
+  const isHls = typeof streamUrl === 'string' && (streamUrl.includes('.m3u8') || streamUrl.includes('/hls'));
+
+  // Priority 1: High-Speed Native OggOpus using prism-media (0 Node CPU transcoding)
+  if (prism) {
+    try {
+      const args = [
+        '-loglevel', 'error',
+        '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+      ];
+      if (!isHls) {
+        args.push('-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_delay_max', '5');
+      }
+      args.push(
+        '-i', streamUrl,
+        '-analyzeduration', '0',
+        '-vn',
+        '-c:a', 'libopus',
+        '-b:a', '192k',
+        '-ar', '48000',
+        '-ac', '2',
+        '-application', 'audio',
+        '-f', 'ogg'
+      );
+      const ff = new prism.FFmpeg({ args });
+      ff.on('error', (err) => {
+        if (!err.message?.includes('Premature close')) console.warn('[Prism FFmpeg error]:', err.message);
+      });
+      return voice.createAudioResource(ff, {
+        inputType: voice.StreamType.OggOpus,
+        inlineVolume: false
+      });
+    } catch (prismErr) {
+      console.warn('[Prism OggOpus Fallback]:', prismErr.message);
+    }
+  }
+
+  // Priority 2: Native FFmpeg PCM Stream
+  const stream = createFfmpegStream(streamUrl);
+  return voice.createAudioResource(stream, {
+    inputType: voice.StreamType.Raw,
+    inlineVolume: false
+  });
+}
+
 // Reliable Audio Stream Generator with Multi-Provider Fallback (JioSaavn 320kbps -> SoundCloud Full -> play-dl -> YouTube)
 async function createAudioStreamResource(url, volume = 100, title = '', duration = 0, crossfade = true) {
   if (!voice) return null;
@@ -950,11 +997,7 @@ async function createAudioStreamResource(url, volume = 100, title = '', duration
   if (url && (url.includes('saavncdn.com') || url.includes('.mp4') || url.includes('.mp3') || url.includes('.m4a'))) {
     try {
       console.log(`[Direct Stream] Playing 320kbps audio: ${url.slice(0, 60)}...`);
-      const stream = createFfmpegStream(url);
-      return voice.createAudioResource(stream, {
-        inputType: voice.StreamType.Raw,
-        inlineVolume: false
-      });
+      return createAudioStreamResourceFromUrl(url);
     } catch (e) {}
   }
 
@@ -964,11 +1007,7 @@ async function createAudioStreamResource(url, volume = 100, title = '', duration
       const jsTrack = await searchJioSaavnTrack(searchQuery);
       if (jsTrack?.url) {
         console.log(`[JioSaavn HD Stream] Playing 320kbps "${jsTrack.title}" (${formatDuration(jsTrack.duration)})`);
-        const stream = createFfmpegStream(jsTrack.url);
-        return voice.createAudioResource(stream, {
-          inputType: voice.StreamType.Raw,
-          inlineVolume: false
-        });
+        return createAudioStreamResourceFromUrl(jsTrack.url);
       }
     } catch (jsErr) {
       console.warn('[JioSaavn Stream warning]:', jsErr.message);
@@ -981,11 +1020,7 @@ async function createAudioStreamResource(url, volume = 100, title = '', duration
       const scData = await getSoundCloudAudioUrl(searchQuery);
       if (scData?.url) {
         console.log(`[SoundCloud Stream] Playing "${scData.title}" (${formatDuration(scData.duration)})`);
-        const stream = createFfmpegStream(scData.url);
-        return voice.createAudioResource(stream, {
-          inputType: voice.StreamType.Raw,
-          inlineVolume: false
-        });
+        return createAudioStreamResourceFromUrl(scData.url);
       }
     } catch (scErr) {
       console.warn('[SoundCloud Stream error]:', scErr.message);
@@ -1355,11 +1390,7 @@ async function playNext(guild, channel) {
 
     if (next.isDirectStream && next.url) {
       console.log(`[JioSaavn HD Stream] Streaming "${next.title}" (${formatDuration(next.duration)})`);
-      const stream = createFfmpegStream(next.url);
-      resource = voice.createAudioResource(stream, {
-        inputType: voice.StreamType.Raw,
-        inlineVolume: false
-      });
+      resource = createAudioStreamResourceFromUrl(next.url);
     } else {
       resource = await createAudioStreamResource(next.url, Q.volume, next.title, next.duration || 0);
     }
@@ -1443,7 +1474,7 @@ async function playNext(guild, channel) {
     } catch (e) {}
 
     // Send the interactive now playing embed at the bottom with quick buttons
-    if (channel) {
+    if (channel && (!Q.currentRetryCount || Q.currentRetryCount === 0)) {
       try {
         const quickButtons = getMusicQuickButtons(Q);
         const playEmbed = getNowPlayingEmbed(next, Q, cfg);
