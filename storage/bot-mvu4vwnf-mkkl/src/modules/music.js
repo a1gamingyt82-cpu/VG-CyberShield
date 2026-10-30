@@ -625,34 +625,41 @@ async function getSoundCloudAudioUrl(query) {
   return null;
 }
 
-// Low-latency, Zero-Buffering FFmpeg Audio Stream Engine
+// Low-latency, Zero-Buffering Native FFmpeg Audio Stream Engine
 function createFfmpegStream(streamUrl) {
-  const ffmpeg = new prism.FFmpeg({
-    args: [
-      '-reconnect', '1',
-      '-reconnect_streamed', '1',
-      '-reconnect_delay_max', '5',
-      '-nostdin',
-      '-i', streamUrl,
-      '-vn',
-      '-f', 's16le',
-      '-ar', '48000',
-      '-ac', '2'
-    ]
+  const fs = require('fs');
+  const { spawn } = require('child_process');
+  let ffmpegBin = process.env.FFMPEG_PATH || 'ffmpeg';
+  try {
+    const ffStatic = require('ffmpeg-static');
+    if (ffStatic && fs.existsSync(ffStatic)) ffmpegBin = ffStatic;
+  } catch {}
+
+  const child = spawn(ffmpegBin, [
+    '-reconnect', '1',
+    '-reconnect_streamed', '1',
+    '-reconnect_delay_max', '5',
+    '-nostdin',
+    '-i', streamUrl,
+    '-vn',
+    '-f', 's16le',
+    '-ar', '48000',
+    '-ac', '2',
+    'pipe:1'
+  ], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+    windowsHide: true
   });
-  if (ffmpeg.process) {
-    ffmpeg.process.on('error', (err) => console.warn('[FFmpeg Process Error]:', err.message));
-    ffmpeg.process.on('close', (code) => {
-      if (code !== 0 && code !== null) console.warn('[FFmpeg Exit Code]:', code);
-    });
-    ffmpeg.process.stderr?.on('data', (d) => {
-      const msg = d.toString().trim();
-      if (msg.includes('Error') || msg.includes('failed') || msg.includes('403') || msg.includes('Invalid')) {
-        console.warn('[FFmpeg Stderr]:', msg.slice(0, 160));
-      }
-    });
-  }
-  return ffmpeg;
+
+  child.on('error', (err) => console.warn('[FFmpeg Native Error]:', err.message));
+  child.stderr.on('data', (d) => {
+    const msg = d.toString().trim();
+    if (msg.includes('Error') || msg.includes('failed') || msg.includes('403') || msg.includes('Invalid')) {
+      console.warn('[FFmpeg Stderr]:', msg.slice(0, 160));
+    }
+  });
+
+  return child.stdout;
 }
 
 // Reliable Audio Stream Generator with Multi-Provider Fallback (Tested SoundCloud Stream -> play-dl -> YouTube)
@@ -660,14 +667,11 @@ async function createAudioStreamResource(url, volume = 100, title = '', directSt
   if (!voice) return null;
 
   // Ultra-Fast Path: If stream URL was pre-fetched, start streaming instantly (0ms delay)
-  if (prism && directStreamUrl) {
+  if (directStreamUrl) {
     try {
       console.log(`[Zero-Buffering Stream] Instant playback for "${title || url}"`);
-      const ffmpeg = createFfmpegStream(directStreamUrl);
-      ffmpeg.on('error', (err) => {
-        if (!err.message?.includes('Premature close')) console.warn('[FFmpeg Stream Warning]:', err.message);
-      });
-      return voice.createAudioResource(ffmpeg, {
+      const stream = createFfmpegStream(directStreamUrl);
+      return voice.createAudioResource(stream, {
         inputType: voice.StreamType.Raw,
         inlineVolume: false,
         highWaterMark: 1024 * 512
@@ -681,17 +685,14 @@ async function createAudioStreamResource(url, volume = 100, title = '', directSt
   const searchQuery = title || url;
 
   // Tier 1: Tested & Verified Direct SoundCloud Engine (0% datacenter blocks, native PCM)
-  if (prism && searchQuery) {
+  if (searchQuery) {
     try {
       const scData = await getSoundCloudAudioUrl(searchQuery);
       if (scData?.url) {
         console.log(`[SoundCloud Stream] Playing "${scData.title}"`);
-        const ffmpeg = createFfmpegStream(scData.url);
-        ffmpeg.on('error', (err) => {
-          if (!err.message?.includes('Premature close')) console.warn('[FFmpeg SoundCloud warning]:', err.message);
-        });
+        const stream = createFfmpegStream(scData.url);
 
-        const resource = voice.createAudioResource(ffmpeg, {
+        const resource = voice.createAudioResource(stream, {
           inputType: voice.StreamType.Raw,
           inlineVolume: false,
           highWaterMark: 1024 * 512
