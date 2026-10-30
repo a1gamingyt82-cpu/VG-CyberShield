@@ -115,13 +115,6 @@ if (require('fs').existsSync(targetSrc)) {
     }
 
     startBot(botId) {
-        if (process.env.RENDER || process.env.IS_RENDER || process.env.WEBSITE_ONLY === 'true') {
-            this.appendLog(botId, '🌐 [Notice] Render is hosting the Website ONLY. Discord Bot is running from your own server/PC.');
-            const b = this.getBot(botId);
-            if (b) { b.status = 'stopped'; this.saveBots(); }
-            return { success: false, message: 'Bot hosting on Render is disabled. Host from your own PC.' };
-        }
-
         const bot = this.getBot(botId);
         if (!bot) throw new Error('Server not found');
 

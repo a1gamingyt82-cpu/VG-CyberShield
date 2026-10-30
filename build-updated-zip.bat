@@ -38,9 +38,6 @@ powershell -NoProfile -Command ^
   "$items = Get-ChildItem -Path $docs | Where-Object { $_.Name -notin @('node_modules', '.git', 'test_zip', 'UPDATE_UPLOAD_FILES') -and $_.Extension -ne '.zip' };" ^
   "Compress-Archive -Path $items.FullName -DestinationPath $dest -Force"
 
-:: Create convenient copy with the original name as well
-copy /y "%DOCS_DIR%\VG_CYBERSHIELD_FINAL_UPDATE.zip" "%DOCS_DIR%\VG_CYBERSHIELD_MONKEYBYTES_FINAL.zip" >nul
-
 echo.
 echo ========================================================
 echo   [SUCCESS] Naya Updated Zip taiyaar ho gaya hai!
