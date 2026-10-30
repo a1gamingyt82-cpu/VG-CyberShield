@@ -869,9 +869,9 @@ async function getSoundCloudAudioUrl(query) {
 
       // STRICTLY require non-snipped stream (protocol === 'progressive' or full HLS)
       const validStreams = transcodings.filter(t => !t.snipped && !t.preset?.includes('_1_'));
-      const chosen = validStreams.find(t => t.format?.protocol === 'hls' && t.preset?.includes('opus'))
-        || validStreams.find(t => t.format?.protocol === 'hls')
-        || validStreams.find(t => t.format?.protocol === 'progressive');
+      const chosen = validStreams.find(t => t.format?.protocol === 'progressive')
+        || validStreams.find(t => t.format?.protocol === 'hls' && t.preset?.includes('opus'))
+        || validStreams.find(t => t.format?.protocol === 'hls');
 
       if (chosen?.url) {
         const streamObj = await fetchJsonHttps(chosen.url + '?client_id=' + cid);
@@ -902,14 +902,17 @@ function createFfmpegStream(streamUrl) {
     }
   } catch {}
 
+  const isHls = streamUrl.includes('.m3u8') || streamUrl.includes('/hls');
   const args = [
-    '-reconnect', '1',
-    '-reconnect_streamed', '1',
-    '-reconnect_delay_max', '5',
-    '-protocol_whitelist', 'file,http,https,tcp,tls,crypto,hls,applehttp,data',
-    '-nostdin',
-    '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    '-headers', 'Icy-MetaData: 0\r\n',
+    '-loglevel', 'error',
+    '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+  ];
+
+  if (!isHls) {
+    args.push('-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_delay_max', '5');
+  }
+
+  args.push(
     '-i', streamUrl,
     '-vn',
     '-c:a', 'pcm_s16le',
@@ -917,7 +920,7 @@ function createFfmpegStream(streamUrl) {
     '-ar', '48000',
     '-ac', '2',
     'pipe:1'
-  ];
+  );
 
   const child = spawn(ffmpegBin, args, {
     stdio: ['ignore', 'pipe', 'pipe'],
@@ -927,9 +930,10 @@ function createFfmpegStream(streamUrl) {
   child.on('error', (err) => console.warn('[FFmpeg Native Error]:', err.message));
   child.stderr.on('data', (d) => {
     const msg = d.toString().trim();
-    if (msg.includes('Error') || msg.includes('failed') || msg.includes('403') || msg.includes('Invalid') || msg.includes('404')) {
-      console.warn('[FFmpeg Stderr]:', msg.slice(0, 160));
-    }
+    if (msg) console.warn('[FFmpeg Stderr]:', msg.slice(0, 200));
+  });
+  child.on('close', (code) => {
+    if (code !== 0 && code !== null) console.warn('[FFmpeg Exit Code]:', code);
   });
 
   return child.stdout;
