@@ -184,6 +184,7 @@ if (require('fs').existsSync(targetSrc)) {
             ...process.env,
             ...fileEnv,
             ...bot.env,
+            PORT: '10001',
             NODE_PATH: globalNodeModules,
             TOKEN: fileEnv.TOKEN || fileEnv.DISCORD_TOKEN || process.env.TOKEN,
             DISCORD_TOKEN: fileEnv.DISCORD_TOKEN || fileEnv.TOKEN || process.env.DISCORD_TOKEN,

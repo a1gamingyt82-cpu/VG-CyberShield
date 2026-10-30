@@ -47,7 +47,10 @@ let chooseFormatFn = null;
     chooseFormatFn = null;
   }
 })();
-try { playdl = require('play-dl'); } catch { playdl = null; }
+try { 
+  playdl = require('play-dl'); 
+  if (playdl) { getSCClientId().catch(() => {}); }
+} catch { playdl = null; }
 
 const queues = new Map(); // guildId -> {conn, player, songs: [], playing, volume, loop, vcId, stay247, currentResource}
 
@@ -438,6 +441,9 @@ async function getSCClientId() {
     if (playdl?.getFreeClientID) {
       cachedScClientId = await playdl.getFreeClientID();
       lastScCidTime = Date.now();
+      if (playdl?.setToken && cachedScClientId) {
+        await playdl.setToken({ soundcloud: { client_id: cachedScClientId } }).catch(() => {});
+      }
       return cachedScClientId;
     }
   } catch {}
@@ -636,6 +642,8 @@ function createFfmpegStream(streamUrl) {
   } catch {}
 
   const child = spawn(ffmpegBin, [
+    '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    '-headers', 'Referer: https://soundcloud.com/\r\n',
     '-nostdin',
     '-i', streamUrl,
     '-vn',

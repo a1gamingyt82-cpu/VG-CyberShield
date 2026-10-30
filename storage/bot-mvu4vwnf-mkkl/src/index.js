@@ -811,6 +811,9 @@ try {
 
   // Anti-Slowloris Socket Protection (10s timeout)
   server.setTimeout(10000);
+  server.on('error', (err) => {
+    // Port already used by master server.js dashboard - safe to ignore
+  });
   server.listen(port, () => console.log(`💓 Web Controller: http://localhost:${port}/controller | Health: http://localhost:${port}/health`));
 
   // 24/7 Autonomous Self-KeepAlive Loop
