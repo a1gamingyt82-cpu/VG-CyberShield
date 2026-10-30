@@ -318,6 +318,19 @@ function isSafePublicUrl(url) {
   }
 }
 
+function fetchJson(url) {
+  return new Promise((resolve) => {
+    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }, (res) => {
+      let d = '';
+      res.on('data', c => d += c);
+      res.on('end', () => {
+        try { resolve(JSON.parse(d)); } catch { resolve(null); }
+      });
+    }).on('error', () => resolve(null));
+  });
+}
+const fetchJsonHttps = fetchJson;
+
 // High-Speed Direct CDN Music Search (JioSaavn 320kbps - 100% Free, Zero Rate Limits, Full Bhojpuri & Bollywood Catalog)
 async function searchJioSaavnTrack(query) {
   if (!query) return null;
@@ -789,6 +802,22 @@ async function createAudioStreamResource(url, volume = 100, title = '', directSt
     } catch (cdnErr) {
       console.warn('[Direct CDN error]:', cdnErr.message);
     }
+  }
+
+  // Tier 0.5: Direct 320kbps CDN Cloud Search (JioSaavn - Zero Ads, Instant Playback)
+  try {
+    const saavnTrack = await searchJioSaavnTrack(searchQuery);
+    if (saavnTrack?.streamUrl) {
+      console.log(`[JioSaavn 320k Cloud] Streaming: "${saavnTrack.title}"`);
+      const stream = createFfmpegStream(saavnTrack.streamUrl);
+      return voice.createAudioResource(stream, {
+        inputType: voice.StreamType.Raw,
+        inlineVolume: false,
+        highWaterMark: 1024 * 512
+      });
+    }
+  } catch (saavnErr) {
+    console.warn('[JioSaavn search notice]:', saavnErr.message);
   }
 
   // Tier 1: Native play-dl SoundCloud Stream Engine (100% stable, zero buffer drops)
