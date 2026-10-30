@@ -1,0 +1,19 @@
+{
+  "name": "botshield-discord-host",
+  "version": "1.0.0",
+  "description": "Enterprise-grade 24/7 Discord Bot Hosting Platform with Unlimited Hardware Allocation & Zero-Trust Security",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "hosting",
+    "24-7",
+    "unlimited-cpu-ram"
+  ],
+  "author": "BotShield",
+  "license": "MIT"
+}
+

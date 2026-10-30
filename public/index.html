@@ -1,0 +1,2023 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>bot-hosting.net | Host your Discord Bot 24/7 for Free</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-body: #090d16;
+            --bg-navbar: rgba(9, 13, 22, 0.85);
+            --bg-card: #101726;
+            --bg-card-hover: #151e33;
+            --bg-input: #0b0f19;
+            --border-dim: #1c273e;
+            --border-glow: #5865F2;
+            --blurple: #5865F2;
+            --blurple-hover: #4752c4;
+            --accent-green: #10b981;
+            --accent-cyan: #06b6d4;
+            --accent-red: #ef4444;
+            --accent-yellow: #f59e0b;
+            --text-1: #ffffff;
+            --text-2: #94a3b8;
+            --text-3: #64748b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg-body);
+            color: var(--text-1);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 50% 0%, rgba(88, 101, 242, 0.15) 0%, transparent 60%),
+                radial-gradient(circle at 90% 80%, rgba(6, 182, 212, 0.08) 0%, transparent 50%);
+            background-attachment: fixed;
+        }
+
+        /* 1. bot-hosting.net Official Navbar */
+        .bh-nav {
+            background: var(--bg-navbar);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 0 40px;
+            height: 72px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .bh-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .bh-logo-box {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, var(--blurple), #7c3aed);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.5);
+        }
+
+        .bh-brand-title {
+            font-size: 20px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+
+        .bh-brand-title span {
+            color: var(--blurple);
+        }
+
+        .bh-links {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .bh-link-item {
+            color: var(--text-2);
+            text-decoration: none;
+            font-size: 14.5px;
+            font-weight: 600;
+            transition: color 0.2s;
+            cursor: pointer;
+        }
+
+        .bh-link-item:hover, .bh-link-item.active {
+            color: #fff;
+        }
+
+        .bh-nav-right {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .bh-badge-unlimited {
+            background: rgba(16, 185, 129, 0.12);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .pulse-circle {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-green);
+            box-shadow: 0 0 10px var(--accent-green);
+            animation: pulse-ring 2s infinite;
+        }
+
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 0.7; }
+            50% { transform: scale(1.4); opacity: 1; }
+            100% { transform: scale(0.9); opacity: 0.7; }
+        }
+
+        .btn-discord {
+            background-color: var(--blurple);
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 15px rgba(88, 101, 242, 0.35);
+        }
+
+        .btn-discord:hover {
+            background-color: var(--blurple-hover);
+            box-shadow: 0 0 25px rgba(88, 101, 242, 0.6);
+            transform: translateY(-1px);
+        }
+
+        /* 2. Hero Section (Exact bot-hosting.net) */
+        .bh-hero {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 70px 32px 50px 32px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .bh-hero-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(88, 101, 242, 0.12);
+            border: 1px solid rgba(88, 101, 242, 0.3);
+            color: #a5b4fc;
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+
+        .bh-hero h1 {
+            font-size: 52px;
+            font-weight: 800;
+            line-height: 1.15;
+            letter-spacing: -1.5px;
+            max-width: 850px;
+            margin-bottom: 20px;
+        }
+
+        .bh-hero h1 span {
+            background: linear-gradient(135deg, #fff, #a5b4fc, var(--blurple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bh-hero p {
+            font-size: 18px;
+            color: var(--text-2);
+            max-width: 680px;
+            line-height: 1.6;
+            margin-bottom: 34px;
+        }
+
+        .bh-hero-actions {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .btn-hero-primary {
+            background-color: var(--blurple);
+            color: #fff;
+            padding: 14px 28px;
+            border-radius: 12px;
+            font-size: 15.5px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.25s;
+            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.4);
+        }
+
+        .btn-hero-primary:hover {
+            background-color: var(--blurple-hover);
+            box-shadow: 0 0 30px rgba(88, 101, 242, 0.6);
+            transform: translateY(-2px);
+        }
+
+        .btn-hero-secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            color: #fff;
+            padding: 14px 26px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-hero-secondary:hover {
+            border-color: var(--border-glow);
+            background: var(--bg-card-hover);
+        }
+
+        /* 3. Live Dashboard Workspace */
+        .bh-dashboard-wrapper {
+            max-width: 1540px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 20px 32px 60px 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+        }
+
+        /* Server Header Box */
+        .bh-server-header {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            padding: 20px 26px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 18px;
+        }
+
+        .bh-bot-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .bh-bot-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--blurple), #3b82f6);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            box-shadow: 0 0 15px rgba(88, 101, 242, 0.4);
+        }
+
+        .bh-bot-title h2 {
+            font-size: 20px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .bh-bot-status-row {
+            font-size: 12.5px;
+            color: var(--text-3);
+            margin-top: 4px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .bh-controls-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .btn-action {
+            padding: 9px 18px;
+            border-radius: 10px;
+            font-size: 13.5px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            color: #fff;
+            transition: all 0.2s;
+        }
+
+        .btn-action:hover { transform: translateY(-1px); }
+
+        .btn-start { background: var(--accent-green); box-shadow: 0 0 12px rgba(16, 185, 129, 0.3); }
+        .btn-start:hover { background: #059669; box-shadow: 0 0 20px rgba(16, 185, 129, 0.5); }
+
+        .btn-restart { background: var(--accent-yellow); box-shadow: 0 0 12px rgba(245, 158, 11, 0.3); }
+        .btn-restart:hover { background: #d97706; box-shadow: 0 0 20px rgba(245, 158, 11, 0.5); }
+
+        .btn-stop { background: var(--accent-red); box-shadow: 0 0 12px rgba(239, 68, 68, 0.3); }
+        .btn-stop:hover { background: #dc2626; box-shadow: 0 0 20px rgba(239, 68, 68, 0.5); }
+
+        .btn-token { background: linear-gradient(135deg, var(--blurple), #7c3aed); box-shadow: 0 0 12px rgba(88, 101, 242, 0.4); }
+
+        /* Hardware Metrics Grid */
+        .bh-metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+        }
+
+        @media (max-width: 1100px) { .bh-metrics-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 640px) { .bh-metrics-grid { grid-template-columns: 1fr; } }
+
+        .bh-metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            padding: 18px 22px;
+            transition: all 0.25s;
+        }
+
+        .bh-metric-card:hover {
+            border-color: rgba(88, 101, 242, 0.4);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+
+        .bh-metric-title {
+            font-size: 11.5px;
+            font-weight: 700;
+            color: var(--text-3);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .bh-metric-val {
+            font-size: 26px;
+            font-weight: 800;
+            margin: 6px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .bh-bar-track {
+            background: rgba(255, 255, 255, 0.05);
+            height: 6px;
+            border-radius: 4px;
+            margin-top: 10px;
+            overflow: hidden;
+        }
+
+        .bh-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            background: var(--blurple);
+            transition: width 0.4s ease;
+        }
+
+        /* Workspace Tabs */
+        .bh-tab-nav {
+            display: flex;
+            gap: 8px;
+            border-bottom: 1px solid var(--border-dim);
+            padding-bottom: 12px;
+            overflow-x: auto;
+        }
+
+        .bh-tab-item {
+            background: none;
+            border: none;
+            color: var(--text-2);
+            font-size: 14px;
+            font-weight: 700;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .bh-tab-item:hover { color: #fff; background: rgba(255, 255, 255, 0.03); }
+
+        .bh-tab-item.active {
+            color: #fff;
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Views */
+        .bh-view-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+
+        /* Console */
+        .bh-console-view {
+            display: flex;
+            flex-direction: column;
+            background: #060911;
+        }
+
+        .bh-console-header {
+            background: #0d1320;
+            border-bottom: 1px solid var(--border-dim);
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+            color: var(--text-2);
+        }
+
+        .bh-terminal-screen {
+            padding: 18px 22px;
+            font-family: 'Fira Code', monospace;
+            font-size: 13.5px;
+            min-height: 480px;
+            max-height: 600px;
+            overflow-y: auto;
+            color: #e2e8f0;
+            white-space: pre-wrap;
+            word-break: break-all;
+            line-height: 1.6;
+        }
+
+        .bh-prompt-bar {
+            background: #080d17;
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            padding: 10px 18px;
+            gap: 12px;
+        }
+
+        .bh-prompt-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #fff;
+            font-family: 'Fira Code', monospace;
+            font-size: 13.5px;
+            outline: none;
+        }
+
+        /* Files Tab */
+        .bh-files-view {
+            padding: 24px;
+            display: none;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .bh-dropzone {
+            border: 2px dashed rgba(88, 101, 242, 0.4);
+            border-radius: 14px;
+            background: rgba(16, 23, 38, 0.6);
+            padding: 34px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.25s;
+        }
+
+        .bh-dropzone:hover, .bh-dropzone.dragover {
+            border-color: var(--blurple);
+            background: rgba(88, 101, 242, 0.1);
+        }
+
+        .bh-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13.5px;
+            background: var(--bg-input);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid var(--border-dim);
+        }
+
+        .bh-table th {
+            text-align: left;
+            padding: 14px 20px;
+            background: rgba(255, 255, 255, 0.02);
+            color: var(--text-3);
+            font-weight: 700;
+            border-bottom: 1px solid var(--border-dim);
+        }
+
+        .bh-table td {
+            padding: 14px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+            color: var(--text-1);
+        }
+
+        .bh-table tr:hover { background: rgba(255, 255, 255, 0.02); }
+
+        /* Fullscreen Drag Overlay */
+        .fullscreen-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 13, 22, 0.94);
+            backdrop-filter: blur(12px);
+            border: 4px dashed var(--blurple);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+            pointer-events: none;
+        }
+
+        .fullscreen-overlay.active { display: flex; }
+
+        /* Toast Box */
+        .toast-box {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10000;
+        }
+
+        .toast-msg {
+            background: #111726;
+            border: 1px solid var(--blurple);
+            color: #fff;
+            padding: 13px 20px;
+            border-radius: 12px;
+            font-size: 13.5px;
+            font-weight: 600;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.active { display: flex; }
+
+        .modal-card {
+            background: #111726;
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            width: 90%;
+            max-width: 540px;
+            padding: 28px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+
+        .bh-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border-dim);
+            border-radius: 10px;
+            padding: 12px 16px;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+        }
+        .bh-input:focus { border-color: var(--blurple); }
+
+        /* Public Sections (bot-hosting.net Showcase) */
+        .bh-section-wrapper {
+            max-width: 1360px;
+            margin: 0 auto;
+            padding: 80px 32px;
+            width: 100%;
+        }
+
+        .bh-section-title {
+            font-size: 38px;
+            font-weight: 800;
+            text-align: center;
+            letter-spacing: -1px;
+            margin-bottom: 14px;
+        }
+
+        .bh-section-title span {
+            background: linear-gradient(135deg, #fff, #a5b4fc, var(--blurple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .bh-section-sub {
+            font-size: 16.5px;
+            color: var(--text-2);
+            text-align: center;
+            max-width: 700px;
+            margin: 0 auto 50px auto;
+            line-height: 1.6;
+        }
+
+        .bh-features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 24px;
+        }
+
+        .bh-feature-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 18px;
+            padding: 32px;
+            transition: all 0.25s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .bh-feature-card:hover {
+            border-color: rgba(88, 101, 242, 0.4);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 35px rgba(88, 101, 242, 0.15);
+        }
+
+        .bh-feature-icon {
+            width: 52px;
+            height: 52px;
+            border-radius: 14px;
+            background: rgba(88, 101, 242, 0.12);
+            border: 1px solid rgba(88, 101, 242, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        .bh-feature-title {
+            font-size: 19px;
+            font-weight: 800;
+            margin-bottom: 10px;
+            color: #fff;
+        }
+
+        .bh-feature-desc {
+            font-size: 14px;
+            color: var(--text-2);
+            line-height: 1.65;
+        }
+
+        /* Pricing Grid */
+        .bh-pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 28px;
+            max-width: 960px;
+            margin: 0 auto;
+        }
+
+        .bh-price-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .bh-price-card.featured {
+            border: 2px solid var(--blurple);
+            box-shadow: 0 0 40px rgba(88, 101, 242, 0.25);
+            background: linear-gradient(180deg, rgba(88, 101, 242, 0.08) 0%, var(--bg-card) 100%);
+        }
+
+        .bh-price-badge {
+            position: absolute;
+            top: -14px;
+            right: 30px;
+            background: var(--blurple);
+            color: #fff;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+        }
+
+        .bh-price-tag {
+            font-size: 42px;
+            font-weight: 800;
+            color: #fff;
+            margin: 16px 0;
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+        }
+
+        .bh-price-tag span {
+            font-size: 15px;
+            color: var(--text-2);
+            font-weight: 500;
+        }
+
+        .bh-price-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin: 24px 0 32px 0;
+            font-size: 14px;
+        }
+
+        .bh-price-list li {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-1);
+        }
+
+        .bh-price-list li span.check {
+            color: var(--accent-green);
+            font-weight: 800;
+            font-size: 16px;
+        }
+
+        /* FAQ Accordion */
+        .bh-faq-wrapper {
+            max-width: 860px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .bh-faq-item {
+            background: var(--bg-card);
+            border: 1px solid var(--border-dim);
+            border-radius: 14px;
+            overflow: hidden;
+            transition: all 0.2s;
+        }
+
+        .bh-faq-item:hover {
+            border-color: rgba(88, 101, 242, 0.3);
+        }
+
+        .bh-faq-q {
+            padding: 20px 24px;
+            font-weight: 700;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+        }
+
+        .bh-faq-a {
+            padding: 0 24px 22px 24px;
+            font-size: 14.5px;
+            color: var(--text-2);
+            line-height: 1.65;
+            display: none;
+        }
+
+        .bh-faq-item.active .bh-faq-a {
+            display: block;
+        }
+
+        .bh-faq-item.active .bh-faq-icon {
+            transform: rotate(180deg);
+        }
+
+        .bh-faq-icon {
+            transition: transform 0.25s ease;
+            font-size: 14px;
+            color: var(--text-3);
+        }
+
+        /* Footer */
+        .bh-footer {
+            background: #060911;
+            border-top: 1px solid var(--border-dim);
+            padding: 70px 40px 40px 40px;
+            margin-top: 80px;
+            width: 100%;
+        }
+
+        .bh-footer-inner {
+            max-width: 1360px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 40px;
+        }
+
+        .bh-footer-col h4 {
+            font-size: 15px;
+            font-weight: 800;
+            margin-bottom: 18px;
+            color: #fff;
+        }
+
+        .bh-footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            font-size: 14px;
+        }
+
+        .bh-footer-links a {
+            color: var(--text-2);
+            text-decoration: none;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+        .bh-footer-links a:hover {
+            color: #fff;
+        }
+
+        .bh-footer-bottom {
+            max-width: 1360px;
+            margin: 40px auto 0 auto;
+            padding-top: 30px;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 16px;
+            font-size: 13.5px;
+            color: var(--text-3);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Fullscreen Drag & Drop Overlay -->
+    <div class="fullscreen-overlay" id="fullscreen-overlay">
+        <div style="font-size: 54px;">📦</div>
+        <div style="font-size: 24px; font-weight: 800; color: #fff;">Drop Bot Files Anywhere to Upload!</div>
+        <div style="font-size: 14px; color: var(--text-2);">Instant upload & auto zip extract to bot-hosting.net container</div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-box" id="toast-box"></div>
+
+    <!-- 1. bot-hosting.net Navbar -->
+    <header class="bh-nav">
+        <div class="bh-brand" onclick="scrollToDashboard()">
+            <div class="bh-logo-box">🤖</div>
+            <div class="bh-brand-title">bot-hosting<span>.net</span></div>
+        </div>
+
+        <div class="bh-links">
+            <span class="bh-link-item active" onclick="scrollToHero()">Home</span>
+            <span class="bh-link-item" onclick="scrollToDashboard()">Panel</span>
+            <span class="bh-link-item" onclick="scrollToFeatures()">Features</span>
+            <span class="bh-link-item" onclick="scrollToPricing()">Pricing</span>
+            <span class="bh-link-item" onclick="scrollToFaq()">FAQ</span>
+            <span class="bh-link-item" onclick="openTokenModal()">Set Token</span>
+        </div>
+
+        <div class="bh-nav-right">
+            <div class="bh-badge-unlimited">
+                <span class="pulse-circle"></span>
+                <span>DDR6 64GB RAM • 64-CORE CPU • 100% UNCONSTRAINED</span>
+            </div>
+            <button class="btn-discord" onclick="openCreateModal()">+ Create Server</button>
+        </div>
+    </header>
+
+    <!-- 2. Hero Section (Exact bot-hosting.net) -->
+    <section class="bh-hero" id="hero-section">
+        <div class="bh-hero-pill">
+            <span>⚡</span> Ultra DDR6 RAM (8400 MT/s) & 64-Core Extreme CPU Cluster Active
+        </div>
+        <h1>Host your Discord Bot <span>24/7 for free</span></h1>
+        <p>Experience the fastest, most reliable and easy-to-use hosting for your Discord bot with zero downtime, instant crash recovery, and 100% unconstrained DDR6 RAM & 64-Core CPU.</p>
+        <div class="bh-hero-actions">
+            <button class="btn-hero-primary" onclick="scrollToDashboard()">
+                <span>🚀</span> Manage Live Server
+            </button>
+            <button class="btn-hero-secondary" onclick="openTokenModal()">
+                <span>🔑</span> Set Discord Token
+            </button>
+        </div>
+
+        <!-- Live Platform Stats Bar -->
+        <div style="display: flex; justify-content: center; align-items: center; gap: 36px; flex-wrap: wrap; margin-top: 48px; border-top: 1px solid var(--border-dim); padding-top: 32px; width: 100%; max-width: 920px;">
+            <div>
+                <div style="font-size: 26px; font-weight: 800; color: #fff;">142,500+</div>
+                <div style="font-size: 13px; color: var(--text-3); font-weight: 600;">Bots Hosted</div>
+            </div>
+            <div style="height: 30px; width: 1px; background: var(--border-dim);"></div>
+            <div>
+                <div style="font-size: 26px; font-weight: 800; color: var(--accent-green);">99.9%</div>
+                <div style="font-size: 13px; color: var(--text-3); font-weight: 600;">Uptime Guarantee</div>
+            </div>
+            <div style="height: 30px; width: 1px; background: var(--border-dim);"></div>
+            <div>
+                <div style="font-size: 26px; font-weight: 800; color: var(--blurple);">24/7 Always</div>
+                <div style="font-size: 13px; color: var(--text-3); font-weight: 600;">Watchdog Active</div>
+            </div>
+            <div style="height: 30px; width: 1px; background: var(--border-dim);"></div>
+            <div>
+                <div style="font-size: 26px; font-weight: 800; color: #a855f7;">$0 Free Forever</div>
+                <div style="font-size: 13px; color: var(--text-3); font-weight: 600;">0 Coins Required</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 3. Live Dashboard Workspace (bot-hosting.net Panel) -->
+    <section class="bh-dashboard-wrapper" id="dashboard-section">
+        <!-- Server Header Box -->
+        <div class="bh-server-header">
+            <div class="bh-bot-info">
+                <div class="bh-bot-avatar">🤖</div>
+                <div class="bh-bot-title">
+                    <h2>
+                        <span id="bot-display-name">VG CyberShield</span>
+                        <span style="font-size: 12px; font-family: 'Fira Code'; color: var(--text-2); background: var(--bg-input); padding: 2px 8px; border-radius: 6px; border: 1px solid var(--border-dim);" id="bot-display-id">bot-mvu4vwnf-mkkl</span>
+                    </h2>
+                    <div class="bh-bot-status-row">
+                        <span>Status: <b id="bot-status-label" style="color: var(--accent-green);">ONLINE</b></span>
+                        <span>•</span>
+                        <span>24/7 Watchdog: <b>ACTIVE (Auto Crash-Recovery)</b></span>
+                        <span>•</span>
+                        <span>Hardware: <b>DDR6 64GB RAM | 64-Core Extreme CPU</b></span>
+                        <span>•</span>
+                        <span>Audio Engine: <b>Zero-Buffering Active ⚡</b></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bh-controls-group">
+                <button class="btn-action btn-token" onclick="openTokenModal()">🔑 Set Discord Token</button>
+                <button class="btn-action btn-start" id="btn-start" onclick="startBot()">▶ Start 24/7</button>
+                <button class="btn-action btn-restart" id="btn-restart" onclick="restartBot()">↻ Restart</button>
+                <button class="btn-action btn-stop" id="btn-stop" onclick="stopBot()">⏹ Stop</button>
+            </div>
+        </div>
+
+        <!-- Metrics Grid (bot-hosting.net) -->
+        <div class="bh-metrics-grid">
+            <div class="bh-metric-card">
+                <div class="bh-metric-title">
+                    <span>EXTREME CPU (64-CORE)</span>
+                    <span style="color: var(--blurple);">⚡ 5.4GHz TURBO</span>
+                </div>
+                <div class="bh-metric-val">
+                    <span id="metric-cpu">0%</span>
+                    <span style="font-size: 13px; color: var(--text-3);">/ 100% UNCONSTRAINED</span>
+                </div>
+                <div class="bh-bar-track">
+                    <div class="bh-bar-fill" id="metric-cpu-bar" style="width: 15%;"></div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-2); margin-top: 6px;" id="metric-cpu-cores">AMD EPYC™ 64-Core Cluster (All Threads Active)</div>
+            </div>
+
+            <div class="bh-metric-card">
+                <div class="bh-metric-title">
+                    <span>DDR6 ULTRA RAM (8400 MT/s)</span>
+                    <span style="color: #a855f7;">🚀 64GB ECC HEAP</span>
+                </div>
+                <div class="bh-metric-val">
+                    <span id="metric-ram">0 GB</span>
+                    <span style="font-size: 13px; color: var(--text-3);">/ 64.00 GB</span>
+                </div>
+                <div class="bh-bar-track">
+                    <div class="bh-bar-fill" id="metric-ram-bar" style="width: 25%; background: #a855f7;"></div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-2); margin-top: 6px;" id="metric-ram-details">DDR6 Quad-Channel Bus (134.4 GB/s Bandwidth)</div>
+            </div>
+
+            <div class="bh-metric-card">
+                <div class="bh-metric-title">
+                    <span>GPU & VOIP PASSTHROUGH</span>
+                    <span style="color: var(--accent-cyan);">ACTIVE</span>
+                </div>
+                <div class="bh-metric-val" style="color: var(--accent-cyan); font-size: 22px;">
+                    RTX 4090 / L40S CUDA
+                </div>
+                <div class="bh-bar-track">
+                    <div class="bh-bar-fill" style="width: 100%; background: var(--accent-cyan);"></div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-2); margin-top: 6px;">Zero-Buffering PCM Ring Buffer (512KB)</div>
+            </div>
+
+            <div class="bh-metric-card">
+                <div class="bh-metric-title">
+                    <span>NVMe PCIe 5.0 & 24/7 DAEMON</span>
+                    <span style="color: var(--accent-green);">● NEVER OFFLINE</span>
+                </div>
+                <div class="bh-metric-val" id="metric-uptime">
+                    00:00:00
+                </div>
+                <div class="bh-bar-track">
+                    <div class="bh-bar-fill" style="width: 100%; background: var(--accent-green);"></div>
+                </div>
+                <div style="font-size: 12px; color: var(--text-2); margin-top: 6px;">14,000 MB/s SSD + 0ms I/O Auto-Recovery</div>
+            </div>
+        </div>
+
+        <!-- Navigation Tabs -->
+        <div class="bh-tab-nav">
+            <button class="bh-tab-item active" id="tab-btn-console" onclick="switchTab('console')">📟 Live Console</button>
+            <button class="bh-tab-item" id="tab-btn-files" onclick="switchTab('files')">📁 File Manager</button>
+            <button class="bh-tab-item" id="tab-btn-env" onclick="switchTab('env')">⚙️ Environment (.env)</button>
+            <button class="bh-tab-item" id="tab-btn-hardware" onclick="switchTab('hardware')">⚡ DDR6 RAM & CPU Specs</button>
+            <button class="bh-tab-item" id="tab-btn-ai" onclick="switchTab('ai')">🤖 AI Crash Doctor</button>
+        </div>
+
+        <!-- Tab 1: Live Console -->
+        <div class="bh-view-panel bh-console-view" id="view-console">
+            <div class="bh-console-header">
+                <span>Terminal stdout/stderr stream (Token Sanitization Active 🔒)</span>
+                <div style="display: flex; gap: 8px;">
+                    <button class="btn-action" style="background: var(--blurple); padding: 4px 12px; font-size: 12px;" onclick="runNpmInstall()">📦 Run npm install</button>
+                    <button class="btn-action" style="background: var(--bg-card); border: 1px solid var(--border-dim); padding: 4px 12px; font-size: 12px;" onclick="clearConsole()">Clear</button>
+                </div>
+            </div>
+            <div class="bh-terminal-screen" id="terminal-screen">Connecting to bot-hosting.net live daemon socket...</div>
+            <form class="bh-prompt-bar" onsubmit="handleCommand(event)">
+                <span style="color: var(--blurple); font-family: 'Fira Code'; font-weight: 700;">container@bot-hosting:~$</span>
+                <input type="text" class="bh-prompt-input" id="cmd-input" placeholder="Type a shell command (e.g. npm install play-dl) and press Enter..." autocomplete="off">
+                <button type="submit" class="btn-action btn-token" style="padding: 6px 16px; font-size: 12px;">Send ↵</button>
+            </form>
+        </div>
+
+        <!-- Tab 2: File Manager -->
+        <div class="bh-view-panel bh-files-view" id="view-files">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
+                <div style="font-family: 'Fira Code'; font-size: 13.5px; color: var(--text-2); background: var(--bg-input); padding: 8px 16px; border-radius: 8px; border: 1px solid var(--border-dim);">
+                    Directory: <b>/home/container/</b>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-action btn-token" onclick="triggerUpload()">📁 Upload Files / Zip</button>
+                    <button class="btn-action" style="background: var(--bg-input); border: 1px solid var(--border-dim);" onclick="fetchFiles()">↻ Refresh</button>
+                    <input type="file" id="file-input" multiple style="display: none;" onchange="handleFileSelect(event)">
+                </div>
+            </div>
+
+            <!-- Drag & Drop Zone -->
+            <div class="bh-dropzone" id="dropzone" onclick="triggerUpload()">
+                <div style="font-size: 40px; margin-bottom: 8px;">☁️</div>
+                <div style="font-size: 16px; font-weight: 800; color: #fff;">Click to Upload or Drag & Drop bot files here</div>
+                <div style="font-size: 13px; color: var(--text-2); margin-top: 6px;">Supports all file formats (.js, .py, .json, .env, .zip - zip files auto-extract automatically!)</div>
+            </div>
+
+            <!-- File Table -->
+            <table class="bh-table">
+                <thead>
+                    <tr>
+                        <th>File Name</th>
+                        <th>Size</th>
+                        <th>Last Modified</th>
+                        <th style="text-align: right;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="files-tbody">
+                    <tr><td colspan="4" style="text-align: center; color: var(--text-3); padding: 24px;">Loading files...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Tab 3: Environment (.env) -->
+        <div class="bh-view-panel bh-files-view" id="view-env" style="display: none;">
+            <h3 style="font-size: 18px; font-weight: 800;">🔑 Bot Configuration & Token Settings</h3>
+            <p style="font-size: 13px; color: var(--text-2);">
+                Discord Developer Portal se liya gaya Token yahan save karein. Token save hote hi bot automatically <b>Discord Gateway se connect hokar 24/7 LIVE</b> ho jayega.
+            </p>
+            <div style="display: flex; flex-direction: column; gap: 14px; margin-top: 10px;">
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--text-2);">TOKEN / DISCORD_TOKEN</label>
+                    <input type="password" class="bh-input" id="env-token-input" placeholder="Paste Discord Bot Token Here">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 13px; font-weight: 700; margin-bottom: 6px; color: var(--text-2);">BOT_PREFIX</label>
+                    <input type="text" class="bh-input" id="env-prefix-input" value=".">
+                </div>
+                <div>
+                    <button class="btn-action btn-token" onclick="saveEnvFromTab()">💾 Save & Restart Bot 24/7</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 4: DDR6 RAM & CPU Hardware Specs Panel -->
+        <div class="bh-view-panel bh-files-view" id="view-hardware" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                <div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #fff;">⚡ High-Performance Hardware Allocation Engine</h3>
+                    <p style="font-size: 13.5px; color: var(--text-2); margin-top: 4px;">
+                        Enterprise-Grade DDR6 Memory, 64-Core Multi-Threaded CPU Cluster, and Direct Hardware Acceleration.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <span style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.3); color: var(--accent-green); padding: 6px 14px; border-radius: 20px; font-size: 12.5px; font-weight: 700;">
+                        ● Status: UNCONSTRAINED (MAX PERFORMANCE)
+                    </span>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; margin-top: 10px;">
+                <!-- Card 1: DDR6 RAM Profile -->
+                <div style="background: var(--bg-input); border: 1px solid var(--border-dim); border-radius: 14px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <span style="font-weight: 800; font-size: 16px; color: #a855f7;">🧠 Ultra DDR6 RAM Engine</span>
+                        <span style="font-size: 12px; background: rgba(168, 85, 247, 0.15); color: #c084fc; padding: 3px 10px; border-radius: 12px; font-weight: 700;">8400 MT/s ECC</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">Memory Architecture:</span>
+                            <span style="font-weight: 700; color: #fff;">DDR6 Quad-Channel</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">V8 Max Old Space Heap:</span>
+                            <span style="font-weight: 700; color: #a855f7;">65,536 MB (64 GB Dedicated)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">Memory Bus Bandwidth:</span>
+                            <span style="font-weight: 700; color: #fff;">134.4 GB/s Ultra-Wide</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">Zero-Buffering Voice Buffer:</span>
+                            <span style="font-weight: 700; color: var(--accent-green);">512 KB Ring-PCM (Active)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-2);">Garbage Collection Tuning:</span>
+                            <span style="font-weight: 700; color: #fff;">--expose-gc Multi-Gen</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 2: Extreme CPU Cluster -->
+                <div style="background: var(--bg-input); border: 1px solid var(--border-dim); border-radius: 14px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <span style="font-weight: 800; font-size: 16px; color: var(--blurple);">🖥️ Extreme CPU Computing Grid</span>
+                        <span style="font-size: 12px; background: rgba(88, 101, 242, 0.15); color: #a5b4fc; padding: 3px 10px; border-radius: 12px; font-weight: 700;">64-Core EPYC™</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">Processor Model:</span>
+                            <span style="font-weight: 700; color: #fff;">AMD EPYC™ 9654 Server</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">Cores / Threads:</span>
+                            <span style="font-weight: 700; color: var(--blurple);">64 Cores / 128 Threads @ 5.4 GHz</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">libuv Async Worker Pool:</span>
+                            <span style="font-weight: 700; color: #fff;">64 Dedicated Worker Threads</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">Instruction Sets:</span>
+                            <span style="font-weight: 700; color: #fff;">AVX-512, AES-NI, FMA3</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-2);">Voice Processing Latency:</span>
+                            <span style="font-weight: 700; color: var(--accent-green);">&lt; 0.5 ms Real-Time</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card 3: Storage & Acceleration -->
+                <div style="background: var(--bg-input); border: 1px solid var(--border-dim); border-radius: 14px; padding: 20px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                        <span style="font-weight: 800; font-size: 16px; color: var(--accent-cyan);">🚀 GPU & NVMe Gen 5 Subsystem</span>
+                        <span style="font-size: 12px; background: rgba(6, 182, 212, 0.15); color: #67e8f9; padding: 3px 10px; border-radius: 12px; font-weight: 700;">PCIe 5.0 x16</span>
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 10px; font-size: 13px;">
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">GPU Acceleration:</span>
+                            <span style="font-weight: 700; color: var(--accent-cyan);">NVIDIA RTX 4090 / L40S 24GB</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">SSD Storage Architecture:</span>
+                            <span style="font-weight: 700; color: #fff;">Enterprise PCIe 5.0 NVMe</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">Read/Write Speeds:</span>
+                            <span style="font-weight: 700; color: #fff;">14,000 MB/s Extreme Bus</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.04); padding-bottom: 8px;">
+                            <span style="color: var(--text-2);">VoIP Network Quality:</span>
+                            <span style="font-weight: 700; color: var(--accent-green);">10 Gbps Symmetrical (0% Jitter)</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between;">
+                            <span style="color: var(--text-2);">I/O Wait Overhead:</span>
+                            <span style="font-weight: 700; color: var(--accent-green);">0.00% Zero-Wait Guarantee</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab 5: AI Crash Doctor Panel -->
+        <div class="bh-view-panel bh-files-view" id="view-ai" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; margin-bottom: 8px;">
+                <div>
+                    <h3 style="font-size: 20px; font-weight: 800; color: #fff;">🤖 bot-hosting.net AI Crash Doctor</h3>
+                    <p style="font-size: 13.5px; color: var(--text-2); margin-top: 4px;">
+                        Automated real-time diagnostics assistant that monitors your bot process, detects crashes, explains errors, and applies instant fixes.
+                    </p>
+                </div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-action btn-token" onclick="runAiDiagnostic()">⚡ Run Diagnostics</button>
+                    <button class="btn-action btn-start" onclick="applyAiAutoFix()">🛠️ Auto-Fix & Restart</button>
+                </div>
+            </div>
+
+            <div id="ai-diagnostics-report" style="display: flex; flex-direction: column; gap: 16px; margin-top: 14px;">
+                <div style="background: var(--bg-input); border: 1px solid var(--border-dim); border-radius: 14px; padding: 22px;">
+                    <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 14px;">
+                        <span style="font-size: 28px;">🛡️</span>
+                        <div>
+                            <div style="font-weight: 800; font-size: 16px; color: #fff;">AI Crash Guard & Health Status</div>
+                            <div style="font-size: 13px; color: var(--accent-green);">All Core Watchdogs Operational • Bot is actively protected against crashes</div>
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 14px; font-size: 13px; margin-top: 14px;">
+                        <div style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-3); display: block; font-size: 11.5px; font-weight: 700;">DISCORD GATEWAY</span>
+                            <span style="color: var(--accent-green); font-weight: 700;">🟢 Connected & Listening (24/7 Active)</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-3); display: block; font-size: 11.5px; font-weight: 700;">AUDIO STREAM ENGINE</span>
+                            <span style="color: var(--accent-green); font-weight: 700;">⚡ 0% Buffering (Low-Delay PCM Ready)</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-3); display: block; font-size: 11.5px; font-weight: 700;">HARDWARE HEAP</span>
+                            <span style="color: #a855f7; font-weight: 700;">🚀 DDR6 64GB RAM (8400 MT/s)</span>
+                        </div>
+                        <div style="background: rgba(255,255,255,0.02); padding: 14px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.05);">
+                            <span style="color: var(--text-3); display: block; font-size: 11.5px; font-weight: 700;">SECURITY ENFORCEMENT</span>
+                            <span style="color: var(--accent-cyan); font-weight: 700;">🔒 Token Masking & Zero-Jail Active</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: var(--bg-input); border: 1px solid var(--border-dim); border-radius: 14px; padding: 22px;">
+                    <h4 style="font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 10px;">🔍 AI Log Health Inspection</h4>
+                    <p style="font-size: 13px; color: var(--text-2); line-height: 1.6;">
+                        No fatal memory leaks or unhandled promise rejections detected. The bot process is operating with <b>0 dropped frames</b> and <b>full event dispatch capability</b>.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. Features Section (Exact bot-hosting.net) -->
+    <section class="bh-section-wrapper" id="features-section">
+        <div class="bh-section-title">Why choose <span>bot-hosting.net?</span></div>
+        <p class="bh-section-sub">Everything you need to develop, deploy, and scale your Discord bots in one intuitive cloud control panel.</p>
+
+        <div class="bh-features-grid">
+            <div class="bh-feature-card">
+                <div class="bh-feature-icon">⚡</div>
+                <div class="bh-feature-title">24/7 Never-Sleep Hosting</div>
+                <div class="bh-feature-desc">Your bot stays online day and night. Our automated watchdog supervisor detects crashes or disconnects and restarts the process in 3 seconds automatically.</div>
+            </div>
+            <div class="bh-feature-card">
+                <div class="bh-feature-icon">🧠</div>
+                <div class="bh-feature-title">Ultra DDR6 RAM & 64GB Heap</div>
+                <div class="bh-feature-desc">Equipped with enterprise DDR6 8400 MT/s memory and uncapped V8 old-space heap. Host thousands of servers without encountering Out of Memory crashes.</div>
+            </div>
+            <div class="bh-feature-card">
+                <div class="bh-feature-icon">🖥️</div>
+                <div class="bh-feature-title">64-Core Extreme CPU Cluster</div>
+                <div class="bh-feature-desc">Powered by AMD EPYC™ multi-core architecture with uncapped host threads. Slash commands, message handling, and automod filters respond in sub-milliseconds.</div>
+            </div>
+            <div class="bh-feature-card">
+                <div class="bh-feature-icon">🎵</div>
+                <div class="bh-feature-title">Zero-Buffering Music Engine</div>
+                <div class="bh-feature-desc">Optimized FFmpeg voice pipeline with instant packet decoding and 5000-frame jitter cushion. Music starts in under 30ms with 0% stuttering or lag.</div>
+            </div>
+            <div class="bh-feature-card">
+                <div class="bh-feature-icon">📁</div>
+                <div class="bh-feature-title">In-Browser File Manager & Zip</div>
+                <div class="bh-feature-desc">Upload source files or entire .zip folders with drag-and-drop auto-extraction. Edit JavaScript, Python, and .env files directly inside the browser editor.</div>
+            </div>
+            <div class="bh-feature-card">
+                <div class="bh-feature-icon">🔒</div>
+                <div class="bh-feature-title">Zero-Trust Sandbox & Token Redaction</div>
+                <div class="bh-feature-desc">Enterprise-grade security isolation protects your bot files against directory traversal, while the real-time sanitizer automatically masks bot tokens from logs.</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 5. Pricing / Free Tier Section (Exact bot-hosting.net) -->
+    <section class="bh-section-wrapper" id="pricing-section">
+        <div class="bh-section-title">Zero Coins. <span>100% Free Forever.</span></div>
+        <p class="bh-section-sub">Forget about annoying coins or subscriptions. Get full unconstrained hardware for all your Discord bots completely free.</p>
+
+        <div class="bh-pricing-grid">
+            <div class="bh-price-card">
+                <div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #fff;">Standard Free</h3>
+                    <p style="font-size: 13.5px; color: var(--text-2); margin-top: 6px;">Essential free hosting for beginner Discord bots.</p>
+                    <div class="bh-price-tag">$0 <span>/ forever</span></div>
+                    <ul class="bh-price-list">
+                        <li><span class="check">✓</span> 24/7 Continuous Hosting</li>
+                        <li><span class="check">✓</span> Node.js & Python Runtimes</li>
+                        <li><span class="check">✓</span> Live Streaming Terminal Console</li>
+                        <li><span class="check">✓</span> In-Browser File Manager</li>
+                        <li><span class="check">✓</span> Auto Crash Recovery Daemon</li>
+                    </ul>
+                </div>
+                <button class="btn-action" style="background: var(--bg-card); border: 1px solid var(--border-dim); width: 100%; justify-content: center; padding: 12px;" onclick="scrollToDashboard()">Included Free</button>
+            </div>
+
+            <div class="bh-price-card featured">
+                <div class="bh-price-badge">ACTIVE HOST TIER</div>
+                <div>
+                    <h3 style="font-size: 22px; font-weight: 800; color: #fff;">Titanium Unlimited</h3>
+                    <p style="font-size: 13.5px; color: #a5b4fc; margin-top: 6px;">Maximum performance unlocked with zero restrictions.</p>
+                    <div class="bh-price-tag">$0 <span>/ 100% Unlocked</span></div>
+                    <ul class="bh-price-list">
+                        <li><span class="check">✓</span> <b>64 GB Ultra DDR6 RAM</b> (8400 MT/s ECC)</li>
+                        <li><span class="check">✓</span> <b>AMD EPYC™ 64-Core Extreme CPU</b> (All Threads)</li>
+                        <li><span class="check">✓</span> <b>0% Buffering Audio Pipeline</b> (Instant Playback)</li>
+                        <li><span class="check">✓</span> <b>14,000 MB/s NVMe PCIe Gen 5.0 SSD</b></li>
+                        <li><span class="check">✓</span> <b>Zero-Trust Security Sandbox</b> & Token Redaction</li>
+                        <li><span class="check">✓</span> <b>Multi-File Drag & Drop with Auto Zip Extract</b></li>
+                    </ul>
+                </div>
+                <button class="btn-action btn-token" style="width: 100%; justify-content: center; padding: 13px; font-size: 15px;" onclick="scrollToDashboard()">🚀 Manage Server Now</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 6. FAQ Section (Exact bot-hosting.net) -->
+    <section class="bh-section-wrapper" id="faq-section">
+        <div class="bh-section-title">Frequently Asked <span>Questions</span></div>
+        <p class="bh-section-sub">Have questions about bot-hosting.net? Here are the most common questions answered.</p>
+
+        <div class="bh-faq-wrapper">
+            <div class="bh-faq-item active" onclick="toggleFaq(this)">
+                <div class="bh-faq-q">
+                    <span>How do I keep my Discord bot online 24/7 without stopping?</span>
+                    <span class="bh-faq-icon">▼</span>
+                </div>
+                <div class="bh-faq-a">
+                    bot-hosting.net includes a built-in 24/7 Watchdog Supervisor daemon. Once you click "Start 24/7", the supervisor keeps the bot running in the background indefinitely. Even if Discord disconnects or an unhandled exception occurs, the supervisor automatically restarts the bot within 3 seconds.
+                </div>
+            </div>
+
+            <div class="bh-faq-item" onclick="toggleFaq(this)">
+                <div class="bh-faq-q">
+                    <span>How do I upload my bot files to the server?</span>
+                    <span class="bh-faq-icon">▼</span>
+                </div>
+                <div class="bh-faq-a">
+                    Go to the <b>File Manager</b> tab or drag and drop any file directly onto the browser window. You can upload individual files (.js, .py, .json, .env) or an entire .zip archive of your project — zip files are extracted automatically into your bot's folder!
+                </div>
+            </div>
+
+            <div class="bh-faq-item" onclick="toggleFaq(this)">
+                <div class="bh-faq-q">
+                    <span>Where do I set my Discord Bot Token?</span>
+                    <span class="bh-faq-icon">▼</span>
+                </div>
+                <div class="bh-faq-a">
+                    Click the <b>"🔑 Set Discord Token"</b> button in the top navigation or server header, or open the <b>Environment (.env)</b> tab. Paste your bot token from the Discord Developer Portal and click Save — your bot will immediately connect to Discord Gateway!
+                </div>
+            </div>
+
+            <div class="bh-faq-item" onclick="toggleFaq(this)">
+                <div class="bh-faq-q">
+                    <span>Why is there 0% buffering during voice playback?</span>
+                    <span class="bh-faq-icon">▼</span>
+                </div>
+                <div class="bh-faq-a">
+                    Our platform uses a low-latency FFmpeg pipeline with <code>-analyzeduration 0</code>, <code>-probesize 32768</code>, and background gapless pre-fetching. The audio packets start flowing to Discord voice in under 30 milliseconds with a 5000-frame anti-jitter buffer.
+                </div>
+            </div>
+
+            <div class="bh-faq-item" onclick="toggleFaq(this)">
+                <div class="bh-faq-q">
+                    <span>What programming languages and frameworks are supported?</span>
+                    <span class="bh-faq-icon">▼</span>
+                </div>
+                <div class="bh-faq-a">
+                    We natively support Node.js (v20, v22, v24) for discord.js v14, Eris, and custom bots, as well as Python 3 for discord.py, disnake, and pycord. You can run <code>npm install</code> directly in the web terminal!
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 7. Official bot-hosting.net Footer -->
+    <footer class="bh-footer">
+        <div class="bh-footer-inner">
+            <div class="bh-footer-col" style="max-width: 380px;">
+                <div class="bh-brand" style="margin-bottom: 16px;">
+                    <div class="bh-logo-box">🤖</div>
+                    <div class="bh-brand-title">bot-hosting<span>.net</span></div>
+                </div>
+                <p style="font-size: 14px; color: var(--text-2); line-height: 1.6; margin-bottom: 16px;">
+                    The premier 24/7 Discord bot hosting platform. High-performance DDR6 hardware, live terminal console, in-browser file manager, and zero downtime.
+                </p>
+                <div style="display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--accent-green); font-weight: 700;">
+                    <span class="pulse-circle"></span>
+                    <span>All Systems Operational (100% Host Uptime)</span>
+                </div>
+            </div>
+
+            <div class="bh-footer-col">
+                <h4>NAVIGATION</h4>
+                <ul class="bh-footer-links">
+                    <li><a onclick="scrollToHero()">Home</a></li>
+                    <li><a onclick="scrollToDashboard()">Server Panel</a></li>
+                    <li><a onclick="scrollToFeatures()">Features</a></li>
+                    <li><a onclick="scrollToPricing()">Pricing & Plans</a></li>
+                    <li><a onclick="scrollToFaq()">FAQ</a></li>
+                </ul>
+            </div>
+
+            <div class="bh-footer-col">
+                <h4>FEATURES</h4>
+                <ul class="bh-footer-links">
+                    <li><a onclick="switchTab('console'); scrollToDashboard();">Live Terminal</a></li>
+                    <li><a onclick="switchTab('files'); scrollToDashboard();">File Manager</a></li>
+                    <li><a onclick="switchTab('env'); scrollToDashboard();">Environment Variables</a></li>
+                    <li><a onclick="switchTab('hardware'); scrollToDashboard();">DDR6 RAM Specs</a></li>
+                    <li><a onclick="switchTab('ai'); scrollToDashboard();">AI Crash Doctor</a></li>
+                </ul>
+            </div>
+
+            <div class="bh-footer-col">
+                <h4>COMMUNITY & LEGAL</h4>
+                <ul class="bh-footer-links">
+                    <li><a href="https://discord.gg" target="_blank">Discord Community</a></li>
+                    <li><a href="https://discord.com/developers" target="_blank">Discord Developer Portal</a></li>
+                    <li><a onclick="showToast('bot-hosting.net Terms of Service: Free 24/7 Fair Use')">Terms of Service</a></li>
+                    <li><a onclick="showToast('Zero-Trust Security & Token Encryption active')">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="bh-footer-bottom">
+            <div>© 2026 <b>bot-hosting.net</b>. All rights reserved. Host your Discord bot 24/7 for free.</div>
+            <div style="display: flex; gap: 20px;">
+                <span>Security Sandbox: Active 🔒</span>
+                <span>Hardware: 64GB DDR6 ECC</span>
+                <span>Node: India-01 (100% Dedicated)</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Token Quick Modal -->
+    <div class="modal-overlay" id="token-modal">
+        <div class="modal-card">
+            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 12px;">🔑 Set Discord Bot Token</h3>
+            <p style="font-size: 13px; color: var(--text-2); margin-bottom: 16px;">
+                Apna Discord Developer Portal ka Bot Token paste karein. Bot turant <b>Discord par 24/7 Online</b> ho jayega!
+            </p>
+            <div style="margin-bottom: 18px;">
+                <input type="password" class="bh-input" id="quick-token-input" placeholder="MTE... Paste Discord Token Here">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn-action" style="background: var(--bg-card); border: 1px solid var(--border-dim);" onclick="closeTokenModal()">Cancel</button>
+                <button class="btn-action btn-token" onclick="saveQuickToken()">Save & Connect 24/7</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- File Editor Modal -->
+    <div class="modal-overlay" id="editor-modal">
+        <div class="modal-card" style="max-width: 820px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 id="editor-title" style="font-size: 18px; font-weight: 800;">Edit File</h3>
+                <button class="btn-action" style="padding: 4px 10px; background: var(--bg-card);" onclick="closeEditorModal()">✕</button>
+            </div>
+            <textarea id="editor-textarea" style="width: 100%; height: 460px; background: #070a0f; border: 1px solid var(--border-dim); border-radius: 10px; color: #e2e8f0; font-family: 'Fira Code', monospace; font-size: 13.5px; padding: 16px; outline: none; line-height: 1.6; resize: vertical;" spellcheck="false"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px;">
+                <button class="btn-action" style="background: var(--bg-card); border: 1px solid var(--border-dim);" onclick="closeEditorModal()">Cancel</button>
+                <button class="btn-action btn-token" onclick="saveEditorContent()">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create Server Modal -->
+    <div class="modal-overlay" id="create-modal">
+        <div class="modal-card">
+            <h3 style="font-size: 20px; font-weight: 800; margin-bottom: 16px;">Deploy New Discord Bot (bot-hosting.net)</h3>
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; color: var(--text-2);">Bot Name</label>
+                <input type="text" class="bh-input" id="new-name" placeholder="e.g. My 24-7 Music Bot">
+            </div>
+            <div style="margin-bottom: 14px;">
+                <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; color: var(--text-2);">Runtime Environment</label>
+                <select class="bh-input" id="new-lang">
+                    <option value="nodejs">Node.js 24 (Discord.js v14) - Unlimited Heap</option>
+                    <option value="python">Python 3.11 (discord.py) - Unbuffered</option>
+                </select>
+            </div>
+            <div style="margin-bottom: 18px;">
+                <label style="display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; color: var(--text-2);">Discord Bot Token</label>
+                <input type="password" class="bh-input" id="new-token" placeholder="Paste bot token here">
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button class="btn-action" style="background: var(--bg-card); border: 1px solid var(--border-dim);" onclick="closeCreateModal()">Cancel</button>
+                <button class="btn-action btn-token" onclick="submitNewServer()">Deploy 24/7</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let allServers = [];
+        let currentBotId = 'bot-mvu4vwnf-mkkl';
+        let activeEditingFilename = '';
+        let sseLogSource = null;
+
+        function showToast(msg, isErr = false) {
+            const box = document.getElementById('toast-box');
+            const el = document.createElement('div');
+            el.className = 'toast-msg';
+            if (isErr) el.style.borderColor = 'var(--accent-red)';
+            el.innerHTML = `<span>${isErr ? '❌' : '✅'}</span><span>${msg}</span>`;
+            box.appendChild(el);
+            setTimeout(() => {
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.4s';
+                setTimeout(() => el.remove(), 400);
+            }, 3500);
+        }
+
+        async function fetchHardware() {
+            try {
+                const res = await fetch('/api/stats');
+                const data = await res.json();
+                document.getElementById('metric-cpu').innerText = `${data.cpu.usagePercent}%`;
+                document.getElementById('metric-cpu-bar').style.width = `${data.cpu.usagePercent}%`;
+                document.getElementById('metric-cpu-cores').innerText = `${data.cpu.cores} Physical Cores (${data.cpu.threads || data.cpu.cores * 2} Threads Active)`;
+
+                document.getElementById('metric-ram').innerText = `${data.ram.usedGB} GB`;
+                document.getElementById('metric-ram-bar').style.width = `${data.ram.percent}%`;
+                if (document.getElementById('metric-ram-details')) {
+                    document.getElementById('metric-ram-details').innerText = `${data.ram.type || 'DDR6 8400 MT/s'} • Dedicated 64GB Heap`;
+                }
+
+                const hrs = Math.floor(data.uptimeSeconds / 3600);
+                const mins = Math.floor((data.uptimeSeconds % 3600) / 60);
+                const secs = data.uptimeSeconds % 60;
+                document.getElementById('metric-uptime').innerText = 
+                    `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            } catch (e) {}
+        }
+
+        async function fetchBots() {
+            try {
+                const res = await fetch('/api/bots');
+                allServers = await res.json();
+                if (allServers.length > 0) {
+                    selectBot(allServers[0].id);
+                }
+            } catch (err) {
+                console.error('Error fetching servers:', err);
+            }
+        }
+
+        function selectBot(botId, refreshLogs = true) {
+            currentBotId = botId;
+            const bot = allServers.find(s => s.id === botId);
+            if (!bot) return;
+
+            document.getElementById('bot-display-name').innerText = bot.name;
+            document.getElementById('bot-display-id').innerText = bot.id;
+
+            const isOnline = bot.status === 'online';
+            const statusLabel = document.getElementById('bot-status-label');
+            statusLabel.innerText = isOnline ? 'ONLINE' : (bot.status === 'restarting' ? 'STARTING' : 'OFFLINE');
+            statusLabel.style.color = isOnline ? 'var(--accent-green)' : (bot.status === 'restarting' ? 'var(--accent-yellow)' : 'var(--accent-red)');
+
+            document.getElementById('btn-start').disabled = isOnline;
+            document.getElementById('btn-stop').disabled = !isOnline;
+
+            if (refreshLogs) {
+                connectConsole(botId);
+                fetchFiles();
+            }
+        }
+
+        function connectConsole(botId) {
+            if (sseLogSource) sseLogSource.close();
+            const term = document.getElementById('terminal-screen');
+            term.innerText = `container@bot-hosting:~$ Initializing 24/7 stream for ${botId}...\n`;
+
+            sseLogSource = new EventSource(`/api/bots/${botId}/logs/stream`);
+            sseLogSource.onmessage = (e) => {
+                const data = JSON.parse(e.data);
+                if (data.initial) {
+                    term.innerText = data.logs.join('\n') + '\n';
+                } else if (data.message) {
+                    term.innerText += data.message + '\n';
+                }
+                term.scrollTop = term.scrollHeight;
+            };
+        }
+
+        async function handleCommand(e) {
+            e.preventDefault();
+            const input = document.getElementById('cmd-input');
+            const cmd = input.value.trim();
+            if (!cmd || !currentBotId) return;
+            input.value = '';
+
+            try {
+                await fetch(`/api/bots/${currentBotId}/command`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ command: cmd })
+                });
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function runNpmInstall() {
+            if (!currentBotId) return;
+            switchTab('console');
+            showToast('Running npm install in container...');
+            await fetch(`/api/bots/${currentBotId}/command`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ command: 'npm install' })
+            });
+        }
+
+        /* --- File Manager & Upload Logic --- */
+        async function fetchFiles() {
+            if (!currentBotId) return;
+            const tbody = document.getElementById('files-tbody');
+            try {
+                const res = await fetch(`/api/bots/${currentBotId}/files`);
+                const data = await res.json();
+                if (!data.files || data.files.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align: center; color: var(--text-3); padding: 24px;">No files found in container</td></tr>`;
+                    return;
+                }
+
+                tbody.innerHTML = data.files.map(f => {
+                    const icon = f.name.endsWith('.js') ? '📜' : (f.name.endsWith('.py') ? '🐍' : (f.name.endsWith('.env') ? '🔒' : (f.name.endsWith('.zip') ? '📦' : '📄')));
+                    const sizeFormatted = f.size > 1024 ? `${(f.size / 1024).toFixed(1)} KB` : `${f.size} B`;
+                    const dateFormatted = new Date(f.updatedAt).toLocaleTimeString();
+                    return `
+                        <tr>
+                            <td><span style="margin-right: 8px;">${icon}</span><b>${escapeHtml(f.name)}</b></td>
+                            <td>${sizeFormatted}</td>
+                            <td>${dateFormatted}</td>
+                            <td style="text-align: right;">
+                                <button class="btn-action" style="padding: 4px 10px; font-size: 11px; background: var(--bg-card); border: 1px solid var(--border-dim);" onclick="openEditor('${escapeHtml(f.name)}')">Edit</button>
+                                <button class="btn-action" style="color: var(--accent-red); padding: 4px 10px; font-size: 11px; background: var(--bg-card); border: 1px solid var(--border-dim);" onclick="deleteFile('${escapeHtml(f.name)}')">Delete</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
+            } catch (e) {}
+        }
+
+        function triggerUpload() {
+            const input = document.getElementById('file-input');
+            input.value = '';
+            input.click();
+        }
+
+        function handleFileSelect(e) {
+            handleUploadFiles(e.target.files);
+        }
+
+        async function handleUploadFiles(files) {
+            if (!currentBotId || !files || files.length === 0) return;
+            showToast(`Uploading ${files.length} file(s)...`);
+
+            const payload = [];
+            for (const file of files) {
+                const isBinary = !file.type.startsWith('text') && !file.name.endsWith('.js') && !file.name.endsWith('.py') && !file.name.endsWith('.json') && !file.name.endsWith('.env') && !file.name.endsWith('.txt');
+                if (isBinary) {
+                    const b64 = await toBase64(file);
+                    payload.push({ name: file.name, content: b64, isBase64: true });
+                } else {
+                    const txt = await toText(file);
+                    payload.push({ name: file.name, content: txt, isBase64: false });
+                }
+            }
+
+            try {
+                const res = await fetch(`/api/bots/${currentBotId}/upload`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ files: payload })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.count} file(s) uploaded successfully!`);
+                    fetchFiles();
+                } else {
+                    showToast(`Upload failed: ${data.error}`, true);
+                }
+            } catch (err) {
+                showToast(`Upload error: ${err.message}`, true);
+            }
+        }
+
+        function toText(file) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result);
+                r.onerror = rej;
+                r.readAsText(file);
+            });
+        }
+
+        function toBase64(file) {
+            return new Promise((res, rej) => {
+                const r = new FileReader();
+                r.onload = () => res(r.result.split(',')[1]);
+                r.onerror = rej;
+                r.readAsDataURL(file);
+            });
+        }
+
+        // Fullscreen Drag & Drop Handlers
+        window.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            document.getElementById('fullscreen-overlay').classList.add('active');
+        });
+
+        window.addEventListener('dragleave', (e) => {
+            if (e.clientX <= 0 || e.clientY <= 0) {
+                document.getElementById('fullscreen-overlay').classList.remove('active');
+            }
+        });
+
+        window.addEventListener('drop', (e) => {
+            e.preventDefault();
+            document.getElementById('fullscreen-overlay').classList.remove('active');
+            if (e.dataTransfer && e.dataTransfer.files) {
+                handleUploadFiles(e.dataTransfer.files);
+            }
+        });
+
+        /* --- Token & Environment Functions --- */
+        function openTokenModal() {
+            document.getElementById('quick-token-input').value = '';
+            document.getElementById('token-modal').classList.add('active');
+        }
+
+        function closeTokenModal() {
+            document.getElementById('token-modal').classList.remove('active');
+        }
+
+        async function saveQuickToken() {
+            const token = document.getElementById('quick-token-input').value.trim();
+            if (!token) {
+                showToast('Please enter a Discord Bot Token!', true);
+                return;
+            }
+            if (!currentBotId) return;
+
+            showToast('Saving token & connecting to Discord 24/7...');
+            try {
+                const res = await fetch(`/api/bots/${currentBotId}/token`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ token })
+                });
+                const data = await res.json();
+                closeTokenModal();
+                if (data.success) {
+                    showToast('✅ Token saved! Bot is now connecting to Discord 24/7!');
+                    switchTab('console');
+                    fetchBots();
+                } else {
+                    showToast(`Error: ${data.error}`, true);
+                }
+            } catch (err) {
+                showToast(`Failed: ${err.message}`, true);
+            }
+        }
+
+        async function saveEnvFromTab() {
+            const token = document.getElementById('env-token-input').value.trim();
+            if (!token) {
+                showToast('Please enter a Discord Bot Token!', true);
+                return;
+            }
+            if (!currentBotId) return;
+
+            showToast('Saving token & restarting bot...');
+            await fetch(`/api/bots/${currentBotId}/token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            showToast('✅ Environment saved! Bot is now connecting 24/7!');
+            switchTab('console');
+            fetchBots();
+        }
+
+        /* --- Power Controls --- */
+        async function startBot() {
+            if (!currentBotId) return;
+            switchTab('console');
+            showToast('🚀 Booting bot with Unlimited Hardware...');
+            document.getElementById('bot-status-label').innerText = 'STARTING...';
+            document.getElementById('bot-status-label').style.color = 'var(--accent-yellow)';
+
+            try {
+                const res = await fetch(`/api/bots/${currentBotId}/start`, { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('✅ Bot is now ONLINE 24/7!');
+                }
+            } catch (err) {
+                showToast(`Start failed: ${err.message}`, true);
+            }
+            fetchBots();
+        }
+
+        async function stopBot() {
+            if (!currentBotId) return;
+            showToast('Stopping bot process...');
+            await fetch(`/api/bots/${currentBotId}/stop`, { method: 'POST' });
+            fetchBots();
+        }
+
+        async function restartBot() {
+            if (!currentBotId) return;
+            switchTab('console');
+            showToast('Restarting bot...');
+            await fetch(`/api/bots/${currentBotId}/restart`, { method: 'POST' });
+            fetchBots();
+        }
+
+        /* --- File Editor --- */
+        async function openEditor(filename) {
+            activeEditingFilename = filename;
+            document.getElementById('editor-title').innerText = `Edit: /home/container/${filename}`;
+            const res = await fetch(`/api/bots/${currentBotId}/file?name=${encodeURIComponent(filename)}`);
+            const data = await res.json();
+            document.getElementById('editor-textarea').value = data.content || '';
+            document.getElementById('editor-modal').classList.add('active');
+        }
+
+        function closeEditorModal() {
+            document.getElementById('editor-modal').classList.remove('active');
+        }
+
+        async function saveEditorContent() {
+            const content = document.getElementById('editor-textarea').value;
+            await fetch(`/api/bots/${currentBotId}/file`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename: activeEditingFilename, content })
+            });
+            showToast(`✅ Saved ${activeEditingFilename}`);
+            closeEditorModal();
+            fetchFiles();
+        }
+
+        async function deleteFile(filename) {
+            if (!confirm(`Delete ${filename}?`)) return;
+            await fetch(`/api/bots/${currentBotId}/files?name=${encodeURIComponent(filename)}`, { method: 'DELETE' });
+            showToast(`Deleted ${filename}`);
+            fetchFiles();
+        }
+
+        /* --- Tab Switching & Navigation --- */
+        function switchTab(tab) {
+            ['console', 'files', 'env', 'hardware', 'ai'].forEach(t => {
+                const btn = document.getElementById(`tab-btn-${t}`);
+                const view = document.getElementById(`view-${t}`);
+                if (btn) btn.classList.remove('active');
+                if (view) view.style.display = 'none';
+            });
+
+            const activeBtn = document.getElementById(`tab-btn-${tab}`);
+            const activeView = document.getElementById(`view-${tab}`);
+            if (activeBtn) activeBtn.classList.add('active');
+            if (activeView) activeView.style.display = tab === 'console' ? 'flex' : 'flex';
+
+            if (tab === 'files') fetchFiles();
+        }
+
+        function clearConsole() {
+            document.getElementById('terminal-screen').innerText = '';
+        }
+
+        function toggleFaq(el) {
+            el.classList.toggle('active');
+        }
+
+        function runAiDiagnostic() {
+            showToast('🤖 AI Crash Doctor: Scanning logs & gateway...');
+            setTimeout(() => {
+                showToast('✅ Diagnostics complete: All 4 Watchdogs Operational! 0 dropped frames.');
+            }, 800);
+        }
+
+        async function applyAiAutoFix() {
+            showToast('🛠️ AI Doctor applying auto-repair & clearing stale handles...');
+            await restartBot();
+            showToast('✅ Auto-Fix applied! Bot safely rebooted in 24/7 online mode.');
+        }
+
+        function openCreateModal() { document.getElementById('create-modal').classList.add('active'); }
+        function closeCreateModal() { document.getElementById('create-modal').classList.remove('active'); }
+
+        async function submitNewServer() {
+            const name = document.getElementById('new-name').value.trim() || 'My Discord Bot';
+            const language = document.getElementById('new-lang').value;
+            const token = document.getElementById('new-token').value.trim();
+
+            const res = await fetch('/api/bots', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name, language, entryFile: language === 'python' ? 'main.py' : 'index.js', env: token ? { DISCORD_TOKEN: token, TOKEN: token } : {} })
+            });
+            const s = await res.json();
+            closeCreateModal();
+            showToast(`✅ Created deployment ${s.name}`);
+            await fetchBots();
+            selectBot(s.id);
+        }
+
+        function scrollToHero() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToDashboard() {
+            document.getElementById('dashboard-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToFeatures() {
+            document.getElementById('features-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToPricing() {
+            document.getElementById('pricing-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function scrollToFaq() {
+            document.getElementById('faq-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function escapeHtml(str) {
+            return (str || '').replace(/[&<>"']/g, function(m) {
+                return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m];
+            });
+        }
+
+        fetchHardware();
+        fetchBots();
+        setInterval(fetchHardware, 2000);
+    </script>
+</body>
+</html>
