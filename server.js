@@ -56,8 +56,18 @@ function sendJson(res, statusCode, data) {
 }
 
 const server = http.createServer(async (req, res) => {
-    const parsedUrl = url.parse(req.url, true);
+    // Support Vercel rewrites & reverse proxies
+    const rawUrl = req.headers['x-forwarded-uri'] || req.headers['x-matched-path'] || req.url || '/';
+    const parsedUrl = url.parse(rawUrl, true);
     let pathname = parsedUrl.pathname || '/';
+
+    // Normalize /public prefix if injected by rewrites
+    if (pathname.startsWith('/public/')) {
+        pathname = pathname.substring(7);
+    } else if (pathname === '/public') {
+        pathname = '/';
+    }
+
     if (pathname.length > 1 && pathname.endsWith('/')) {
         pathname = pathname.slice(0, -1);
     }
@@ -387,3 +397,5 @@ server.on('error', (err) => {
 });
 
 listenServer(PORT);
+
+module.exports = server;
