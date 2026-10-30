@@ -89,33 +89,51 @@ const server = http.createServer(async (req, res) => {
             return sendJson(res, 201, bot);
         }
 
-        // 3. Quick Token Save & Auto-Restart
+        // 3. Quick Token Save & Auto-Restart (With Vercel Read-Only Fallback)
         const tokenMatch = pathname.match(/^\/api\/bots\/([a-zA-Z0-9_-]+)\/token$/);
         if (method === 'POST' && tokenMatch) {
             const botId = tokenMatch[1];
             const body = await parseBody(req);
             const token = (body.token || '').trim();
 
-            const botDir = sandbox.resolveSafePath(botId);
-            const envPath = path.join(botDir, '.env');
-
-            let envContent = `TOKEN=${token}\nDISCORD_TOKEN=${token}\nBOT_PREFIX=.\n`;
-            if (fs.existsSync(envPath)) {
-                let existing = fs.readFileSync(envPath, 'utf8');
-                if (existing.includes('TOKEN=')) {
-                    existing = existing.replace(/^TOKEN=.*/gm, `TOKEN=${token}`);
-                } else {
-                    existing += `\nTOKEN=${token}\n`;
-                }
-                if (existing.includes('DISCORD_TOKEN=')) {
-                    existing = existing.replace(/^DISCORD_TOKEN=.*/gm, `DISCORD_TOKEN=${token}`);
-                } else {
-                    existing += `\nDISCORD_TOKEN=${token}\n`;
-                }
-                envContent = existing;
+            if (!token) {
+                return sendJson(res, 400, { error: 'Token cannot be empty' });
             }
-            fs.writeFileSync(envPath, envContent, 'utf8');
-            supervisor.appendLog(botId, `container@bot-hosting:~$ 🔑 Discord Token saved to .env! Re-connecting to Discord Gateway...`);
+
+            process.env.TOKEN = token;
+            process.env.DISCORD_TOKEN = token;
+
+            const bot = supervisor.getBot(botId);
+            if (bot) {
+                bot.env = bot.env || {};
+                bot.env.TOKEN = token;
+                bot.env.DISCORD_TOKEN = token;
+            }
+
+            try {
+                const botDir = sandbox.resolveSafePath(botId);
+                const envPath = path.join(botDir, '.env');
+                let envContent = `TOKEN=${token}\nDISCORD_TOKEN=${token}\nBOT_PREFIX=.\n`;
+                if (fs.existsSync(envPath)) {
+                    let existing = fs.readFileSync(envPath, 'utf8');
+                    if (existing.includes('TOKEN=')) {
+                        existing = existing.replace(/^TOKEN=.*/gm, `TOKEN=${token}`);
+                    } else {
+                        existing += `\nTOKEN=${token}\n`;
+                    }
+                    if (existing.includes('DISCORD_TOKEN=')) {
+                        existing = existing.replace(/^DISCORD_TOKEN=.*/gm, `DISCORD_TOKEN=${token}`);
+                    } else {
+                        existing += `\nDISCORD_TOKEN=${token}\n`;
+                    }
+                    envContent = existing;
+                }
+                fs.writeFileSync(envPath, envContent, 'utf8');
+            } catch (fsErr) {
+                console.log('[Notice] Read-only filesystem detected (Vercel). Token saved to runtime environment.');
+            }
+
+            supervisor.appendLog(botId, `container@bot-hosting:~$ 🔑 Discord Token saved successfully! Connecting to Discord Gateway...`);
 
             await supervisor.restartBot(botId);
             return sendJson(res, 200, { success: true, message: 'Token updated and bot restarted' });
