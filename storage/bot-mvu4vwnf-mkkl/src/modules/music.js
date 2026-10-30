@@ -896,7 +896,10 @@ function createFfmpegStream(streamUrl) {
   let ffmpegBin = process.env.FFMPEG_PATH || 'ffmpeg';
   try {
     const ffStatic = require('ffmpeg-static');
-    if (ffStatic && fs.existsSync(ffStatic)) ffmpegBin = ffStatic;
+    if (ffStatic && fs.existsSync(ffStatic)) {
+      ffmpegBin = ffStatic;
+      try { fs.chmodSync(ffmpegBin, 0o755); } catch {}
+    }
   } catch {}
 
   const args = [
@@ -1374,79 +1377,92 @@ async function playNext(guild, channel) {
     Q.playing = true;
 
     // 5-Second DJ Crossfade Alert: 5s before song finishes, notify channel with upcoming song title
-    const songDurationSec = next.duration || 180;
-    if (songDurationSec > 12) {
-      const alertTimeMs = Math.max(5000, (songDurationSec - 5) * 1000);
-      Q.upNextTimer = setTimeout(async () => {
-        try {
-          if (!Q.playing || Q.songs[0]?.id !== next.id) return;
-          let upcoming = Q.songs[1];
-          if (!upcoming && (Q.autoplay !== false || Q.stay247)) {
-            upcoming = await fetchNextDifferentSong(Q);
-            if (upcoming && Q.songs.length === 1) Q.songs.push(upcoming);
-          }
-          if (upcoming && channel) {
-            const upTitle = cleanTitle(upcoming.title || 'Next Audio Track');
-            const upEmbed = new EmbedBuilder()
-              .setColor(0x5865f2)
-              .setAuthor({
-                name: '⏳ [ 𝟓 𝐒𝐞𝐜𝐨𝐧𝐝𝐬 𝐋𝐞𝐟𝐭 — 𝐄𝐧𝐝𝐢𝐧𝐠 𝐒𝐨𝐨𝐧 ]',
-                iconURL: 'https://cdn.discordapp.com/emojis/1551154653201440828.gif'
-              })
-              .setDescription(
-                `<a:joya:1551393231642829001> **Up Next :** \`${upTitle.slice(0, 100)}\`\n` +
-                `🎧 *Zero-Ad Stream Pre-Buffered in RAM & Ready to Blend...*`
-              );
-            const alertMsg = await channel.send({ embeds: [upEmbed] }).catch(() => null);
-            if (alertMsg) setTimeout(() => alertMsg.delete().catch(() => {}), 11000);
-          }
-        } catch (e) {}
-      }, alertTimeMs);
-    }
+    try {
+      const songDurationSec = next.duration || 180;
+      if (songDurationSec > 12) {
+        const alertTimeMs = Math.max(5000, (songDurationSec - 5) * 1000);
+        Q.upNextTimer = setTimeout(async () => {
+          try {
+            if (!Q.playing || Q.songs[0]?.id !== next.id) return;
+            let upcoming = Q.songs[1];
+            if (!upcoming && (Q.autoplay !== false || Q.stay247)) {
+              upcoming = await fetchNextDifferentSong(Q);
+              if (upcoming && Q.songs.length === 1) Q.songs.push(upcoming);
+            }
+            if (upcoming && channel) {
+              const upTitle = cleanTitle(upcoming.title || 'Next Audio Track');
+              const upEmbed = new EmbedBuilder()
+                .setColor(0x5865f2)
+                .setAuthor({
+                  name: '⏳ [ 𝟓 𝐒𝐞𝐜𝐨𝐧𝐝𝐬 𝐋𝐞𝐟𝐭 — 𝐄𝐧𝐝𝐢𝐧𝐠 𝐒𝐨𝐨𝐧 ]',
+                  iconURL: 'https://cdn.discordapp.com/emojis/1551154653201440828.gif'
+                })
+                .setDescription(
+                  `<a:joya:1551393231642829001> **Up Next :** \`${upTitle.slice(0, 100)}\`\n` +
+                  `🎧 *Zero-Ad Stream Pre-Buffered in RAM & Ready to Blend...*`
+                );
+              const alertMsg = await channel.send({ embeds: [upEmbed] }).catch(() => null);
+              if (alertMsg) setTimeout(() => alertMsg.delete().catch(() => {}), 11000);
+            }
+          } catch (e) {}
+        }, alertTimeMs);
+      }
+    } catch (e) {}
 
     // Smooth Pre-Buffering & Seamless Crossfade Transition:
     // If there is an upcoming song in queue, pre-cache it 4 seconds before current song ends so transition is gapless!
-    if (Q.earlyTransitionTimer) {
-      clearTimeout(Q.earlyTransitionTimer);
-      Q.earlyTransitionTimer = null;
-    }
-    const songDur = next.duration || 0;
-    if (songDur > 25 && isCrossfade) {
-      const prefetchDelay = Math.max(10, (songDur - 4) * 1000);
-      Q.earlyTransitionTimer = setTimeout(async () => {
-        if (Q.playing && !Q.isProcessing) {
-          if (Q.songs.length > 1) {
-            const upcoming = Q.songs[1];
-            console.log(`[Crossfade Pre-Buffer] Pre-caching upcoming track: "${upcoming.title}"`);
-          } else if (Q.autoplay === true || Q.stay247) {
-            const autoSong = await fetchNextDifferentSong(Q);
-            if (autoSong && !Q.songs.some(s => s.id === autoSong.id)) {
-              Q.songs.push(autoSong);
+    try {
+      if (Q.earlyTransitionTimer) {
+        clearTimeout(Q.earlyTransitionTimer);
+        Q.earlyTransitionTimer = null;
+      }
+      const isCrossfade = Q.crossfade !== false;
+      const songDur = next.duration || 0;
+      if (songDur > 25 && isCrossfade) {
+        const prefetchDelay = Math.max(10, (songDur - 4) * 1000);
+        Q.earlyTransitionTimer = setTimeout(async () => {
+          try {
+            if (Q.playing && !Q.isProcessing) {
+              if (Q.songs.length > 1) {
+                const upcoming = Q.songs[1];
+                console.log(`[Crossfade Pre-Buffer] Pre-caching upcoming track: "${upcoming.title}"`);
+              } else if (Q.autoplay === true || Q.stay247) {
+                const autoSong = await fetchNextDifferentSong(Q);
+                if (autoSong && !Q.songs.some(s => s.id === autoSong.id)) {
+                  Q.songs.push(autoSong);
+                }
+              }
             }
-          }
-        }
-      }, prefetchDelay);
-    }
+          } catch (e) {}
+        }, prefetchDelay);
+      }
+    } catch (e) {}
 
     // Send the interactive now playing embed at the bottom with quick buttons
     if (channel) {
-      const quickButtons = getMusicQuickButtons(Q);
-      const playEmbed = getNowPlayingEmbed(next, Q, cfg);
+      try {
+        const quickButtons = getMusicQuickButtons(Q);
+        const playEmbed = getNowPlayingEmbed(next, Q, cfg);
 
-      if (Q.controllerMsg) {
-        try {
-          await Q.controllerMsg.edit({ components: [] }).catch(() => {});
-        } catch {}
+        if (Q.controllerMsg) {
+          try {
+            await Q.controllerMsg.edit({ components: [] }).catch(() => {});
+          } catch {}
+        }
+        Q.controllerMsg = await channel.send({ embeds: [playEmbed], components: quickButtons }).catch(() => null);
+      } catch (uiErr) {
+        console.warn('[NowPlaying Embed UI warning]:', uiErr.message);
       }
-      Q.controllerMsg = await channel.send({ embeds: [playEmbed], components: quickButtons }).catch(() => null);
     }
   } catch (err) {
     console.error('[playNext Exception]:', err.message);
-    const skipped = Q.songs.shift();
-    if (skipped?.id) Q.playedIds = (Q.playedIds || []).concat(skipped.id).slice(-50);
-    await new Promise(r => setTimeout(r, 1500));
-    Q.isProcessing = false;
-    playNext(guild, channel);
+    if (!Q.playing && Q.songs.length > 0) {
+      const skipped = Q.songs.shift();
+      if (skipped?.id) Q.playedIds = (Q.playedIds || []).concat(skipped.id).slice(-50);
+      await new Promise(r => setTimeout(r, 1500));
+      Q.isProcessing = false;
+      playNext(guild, channel);
+    }
   } finally {
     Q.isProcessing = false;
   }
