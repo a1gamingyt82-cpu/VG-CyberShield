@@ -1,0 +1,851 @@
+{
+  "1559719224425975850": {
+    "prefix": ".",
+    "enabled": true,
+    "strictModeEvenForOwner": true,
+    "limits": {
+      "BAN": {
+        "count": 2,
+        "perSec": 10
+      },
+      "KICK": {
+        "count": 2,
+        "perSec": 10
+      },
+      "CHANNEL_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "CHANNEL_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "ROLE_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "ROLE_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "WEBHOOK": {
+        "count": 2,
+        "perSec": 15
+      },
+      "BOT_ADD": {
+        "count": 1,
+        "perSec": 60
+      },
+      "UNBAN": {
+        "count": 2,
+        "perSec": 15
+      },
+      "GUILD_UPDATE": {
+        "count": 2,
+        "perSec": 20
+      },
+      "MEMBER_ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 15
+      },
+      "EMOJI_DELETE": {
+        "count": 3,
+        "perSec": 20
+      },
+      "PRUNE": {
+        "count": 1,
+        "perSec": 60
+      },
+      "EMOJI_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "INVITE_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "THREAD": {
+        "count": 4,
+        "perSec": 30
+      },
+      "ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 20
+      },
+      "INTEGRATION": {
+        "count": 2,
+        "perSec": 60
+      },
+      "TIMEOUT_SPAM": {
+        "count": 4,
+        "perSec": 30
+      },
+      "AUTOMOD_RULE": {
+        "count": 2,
+        "perSec": 30
+      },
+      "EVENT_CREATE": {
+        "count": 3,
+        "perSec": 60
+      }
+    },
+    "dayCaps": {
+      "ban": 10,
+      "kick": 10,
+      "wlBan": 5,
+      "wlKick": 5,
+      "windowH": 24
+    },
+    "autoFreeze": true,
+    "protectBotRole": true,
+    "lockdownOnOwnerCompromise": true,
+    "punish": "ban",
+    "zeroTolerance": true,
+    "onlyOwnerCanBan": true,
+    "quarantineRoleName": "⚠️ QUARANTINED",
+    "antiLink": true,
+    "antiEveryone": true,
+    "antiWebhookSpam": true,
+    "linkTimeoutMin": 10,
+    "everyoneTimeoutMin": 10,
+    "linkAllowList": [
+      "discord.gg/",
+      "discord.com/invite/",
+      "youtube.com",
+      "youtu.be"
+    ],
+    "autoRevert": true,
+    "autoBackupHours": 6,
+    "logChannelId": "1559719225252380794",
+    "logs": {
+      "antinuke": null,
+      "mod": null,
+      "member": null,
+      "message": null
+    },
+    "roles": {
+      "quarantine": null,
+      "unbypassable": null,
+      "unbypass": null,
+      "event": null,
+      "allMembers": null
+    },
+    "eventRoleId": null,
+    "tickEmoji": null,
+    "crossEmoji": null,
+    "dotEmoji": null,
+    "moduleEmojis": {},
+    "whitelist": [],
+    "extraOwners": [],
+    "automod": {
+      "ghostping": true,
+      "caps": true,
+      "spam": true,
+      "links": true,
+      "invites": true,
+      "maxMentions": 4,
+      "maxLines": 8,
+      "maxCapsPct": 70,
+      "automodWhitelist": [],
+      "bypass": {}
+    },
+    "autorole": {
+      "humans": [],
+      "bots": [],
+      "all": []
+    },
+    "autoreact": [],
+    "autoresponder": [],
+    "serverlog": null,
+    "logdelete": true,
+    "j2c": null,
+    "vcrole": [],
+    "voicemaster": null,
+    "greet": {
+      "channelId": "2222",
+      "enabled": true,
+      "message": "Welcome To ✧ VG CHEATS ✧ 📖\n\n📖 Checkout These Channels 📖\n🔹 Text 📜 〢︲ <#1111>\n🔹 Text 📢 〢︲ ANNOUNCEMENT\n🔹 Text 💬 〢︲ CHAT\n🔹 Text 🎫 〢︲ TICKET\n\n🌸 Thanks For Joining Our Server 🌸"
+    },
+    "ticket": {
+      "image": null
+    },
+    "afk": {},
+    "nightmode": null,
+    "antialt": {
+      "enabled": false,
+      "minDays": 7
+    },
+    "musicvc": null,
+    "musicrole": null,
+    "customrole": null,
+    "snipeCache": {
+      "1559774685376417842": {
+        "content": "🧹 Cleared 12 msgs",
+        "author": "VG CyberShield#2261",
+        "at": 1791949886841
+      }
+    }
+  },
+  "1550681923897135274": {
+    "prefix": ".",
+    "enabled": true,
+    "strictModeEvenForOwner": true,
+    "limits": {
+      "BAN": {
+        "count": 2,
+        "perSec": 10
+      },
+      "KICK": {
+        "count": 2,
+        "perSec": 10
+      },
+      "CHANNEL_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "CHANNEL_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "ROLE_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "ROLE_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "WEBHOOK": {
+        "count": 2,
+        "perSec": 15
+      },
+      "BOT_ADD": {
+        "count": 1,
+        "perSec": 60
+      },
+      "GUILD_UPDATE": {
+        "count": 2,
+        "perSec": 20
+      },
+      "MEMBER_ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 15
+      },
+      "EMOJI_DELETE": {
+        "count": 3,
+        "perSec": 20
+      },
+      "PRUNE": {
+        "count": 1,
+        "perSec": 60
+      },
+      "EMOJI_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "INVITE_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "THREAD": {
+        "count": 4,
+        "perSec": 30
+      },
+      "ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 20
+      },
+      "INTEGRATION": {
+        "count": 2,
+        "perSec": 60
+      },
+      "TIMEOUT_SPAM": {
+        "count": 4,
+        "perSec": 30
+      },
+      "AUTOMOD_RULE": {
+        "count": 2,
+        "perSec": 30
+      },
+      "EVENT_CREATE": {
+        "count": 3,
+        "perSec": 60
+      }
+    },
+    "dayCaps": {
+      "ban": 10,
+      "kick": 10,
+      "windowH": 24
+    },
+    "autoFreeze": true,
+    "protectBotRole": true,
+    "lockdownOnOwnerCompromise": true,
+    "punish": "ban",
+    "quarantineRoleName": "⚠️ QUARANTINED",
+    "antiLink": true,
+    "antiEveryone": true,
+    "antiWebhookSpam": true,
+    "linkTimeoutMin": 10,
+    "everyoneTimeoutMin": 10,
+    "linkAllowList": [
+      "discord.gg/",
+      "discord.com/invite/",
+      "youtube.com",
+      "youtu.be"
+    ],
+    "autoRevert": true,
+    "autoBackupHours": 6,
+    "logChannelId": null,
+    "tickEmoji": null,
+    "crossEmoji": null,
+    "whitelist": [],
+    "extraOwners": [],
+    "automod": {
+      "ghostping": true,
+      "caps": true,
+      "spam": true,
+      "links": true,
+      "invites": true,
+      "maxMentions": 4,
+      "maxLines": 8,
+      "maxCapsPct": 70,
+      "automodWhitelist": []
+    },
+    "autorole": {
+      "humans": [],
+      "bots": [],
+      "all": []
+    },
+    "autoreact": [],
+    "autoresponder": [],
+    "serverlog": null,
+    "logdelete": true,
+    "j2c": null,
+    "vcrole": [],
+    "voicemaster": null,
+    "greet": null,
+    "afk": {},
+    "nightmode": null,
+    "antialt": {
+      "enabled": false,
+      "minDays": 7
+    },
+    "musicvc": null,
+    "musicrole": null,
+    "customrole": null,
+    "snipeCache": {}
+  },
+  "g1": {
+    "prefix": ".",
+    "enabled": true,
+    "strictModeEvenForOwner": true,
+    "limits": {
+      "BAN": {
+        "count": 2,
+        "perSec": 10
+      },
+      "KICK": {
+        "count": 2,
+        "perSec": 10
+      },
+      "CHANNEL_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "CHANNEL_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "ROLE_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "ROLE_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "WEBHOOK": {
+        "count": 2,
+        "perSec": 15
+      },
+      "BOT_ADD": {
+        "count": 1,
+        "perSec": 60
+      },
+      "GUILD_UPDATE": {
+        "count": 2,
+        "perSec": 20
+      },
+      "MEMBER_ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 15
+      },
+      "EMOJI_DELETE": {
+        "count": 3,
+        "perSec": 20
+      },
+      "PRUNE": {
+        "count": 1,
+        "perSec": 60
+      },
+      "EMOJI_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "INVITE_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "THREAD": {
+        "count": 4,
+        "perSec": 30
+      },
+      "ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 20
+      },
+      "INTEGRATION": {
+        "count": 2,
+        "perSec": 60
+      },
+      "TIMEOUT_SPAM": {
+        "count": 4,
+        "perSec": 30
+      },
+      "AUTOMOD_RULE": {
+        "count": 2,
+        "perSec": 30
+      },
+      "EVENT_CREATE": {
+        "count": 3,
+        "perSec": 60
+      }
+    },
+    "dayCaps": {
+      "ban": 10,
+      "kick": 10,
+      "windowH": 24
+    },
+    "autoFreeze": true,
+    "protectBotRole": true,
+    "lockdownOnOwnerCompromise": true,
+    "punish": "ban",
+    "quarantineRoleName": "⚠️ QUARANTINED",
+    "antiLink": true,
+    "antiEveryone": true,
+    "antiWebhookSpam": true,
+    "linkTimeoutMin": 10,
+    "everyoneTimeoutMin": 10,
+    "linkAllowList": [
+      "discord.gg/",
+      "discord.com/invite/",
+      "youtube.com",
+      "youtu.be"
+    ],
+    "autoRevert": true,
+    "autoBackupHours": 6,
+    "logChannelId": null,
+    "tickEmoji": null,
+    "crossEmoji": null,
+    "dotEmoji": null,
+    "moduleEmojis": {},
+    "whitelist": [],
+    "extraOwners": [],
+    "automod": {
+      "ghostping": true,
+      "caps": true,
+      "spam": true,
+      "links": true,
+      "invites": true,
+      "maxMentions": 4,
+      "maxLines": 8,
+      "maxCapsPct": 70,
+      "automodWhitelist": []
+    },
+    "autorole": {
+      "humans": [],
+      "bots": [],
+      "all": []
+    },
+    "autoreact": [],
+    "autoresponder": [],
+    "serverlog": null,
+    "logdelete": true,
+    "j2c": null,
+    "vcrole": [],
+    "voicemaster": null,
+    "greet": null,
+    "afk": {},
+    "nightmode": null,
+    "antialt": {
+      "enabled": false,
+      "minDays": 7
+    },
+    "musicvc": null,
+    "musicrole": null,
+    "customrole": null,
+    "snipeCache": {}
+  },
+  "1553440579688333383": {
+    "prefix": ".",
+    "enabled": true,
+    "strictModeEvenForOwner": true,
+    "limits": {
+      "BAN": {
+        "count": 1,
+        "perSec": 10
+      },
+      "KICK": {
+        "count": 2,
+        "perSec": 10
+      },
+      "CHANNEL_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "CHANNEL_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "ROLE_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "ROLE_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "WEBHOOK": {
+        "count": 2,
+        "perSec": 15
+      },
+      "BOT_ADD": {
+        "count": 1,
+        "perSec": 60
+      },
+      "UNBAN": {
+        "count": 2,
+        "perSec": 15
+      },
+      "GUILD_UPDATE": {
+        "count": 2,
+        "perSec": 20
+      },
+      "MEMBER_ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 15
+      },
+      "EMOJI_DELETE": {
+        "count": 3,
+        "perSec": 20
+      },
+      "PRUNE": {
+        "count": 1,
+        "perSec": 60
+      },
+      "EMOJI_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "INVITE_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "THREAD": {
+        "count": 4,
+        "perSec": 30
+      },
+      "ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 20
+      },
+      "INTEGRATION": {
+        "count": 2,
+        "perSec": 60
+      },
+      "TIMEOUT_SPAM": {
+        "count": 4,
+        "perSec": 30
+      },
+      "AUTOMOD_RULE": {
+        "count": 2,
+        "perSec": 30
+      },
+      "EVENT_CREATE": {
+        "count": 3,
+        "perSec": 60
+      }
+    },
+    "dayCaps": {
+      "ban": 10,
+      "kick": 10,
+      "wlBan": 5,
+      "wlKick": 5,
+      "windowH": 24
+    },
+    "autoFreeze": true,
+    "protectBotRole": true,
+    "lockdownOnOwnerCompromise": true,
+    "punish": "ban",
+    "zeroTolerance": true,
+    "onlyOwnerCanBan": true,
+    "quarantineRoleName": "⚠️ QUARANTINED",
+    "antiLink": true,
+    "antiEveryone": true,
+    "antiWebhookSpam": true,
+    "linkTimeoutMin": 10,
+    "everyoneTimeoutMin": 10,
+    "linkAllowList": [
+      "discord.gg/",
+      "discord.com/invite/",
+      "youtube.com",
+      "youtu.be"
+    ],
+    "autoRevert": true,
+    "autoBackupHours": 6,
+    "logChannelId": null,
+    "logs": {
+      "antinuke": null,
+      "mod": null,
+      "member": null,
+      "message": null
+    },
+    "roles": {
+      "quarantine": null,
+      "unbypassable": null,
+      "unbypass": null,
+      "event": null,
+      "allMembers": null
+    },
+    "eventRoleId": null,
+    "tickEmoji": null,
+    "crossEmoji": null,
+    "dotEmoji": null,
+    "moduleEmojis": {},
+    "whitelist": [],
+    "extraOwners": [],
+    "automod": {
+      "ghostping": true,
+      "caps": true,
+      "spam": true,
+      "links": true,
+      "invites": true,
+      "maxMentions": 4,
+      "maxLines": 8,
+      "maxCapsPct": 70,
+      "automodWhitelist": [],
+      "bypass": {}
+    },
+    "autorole": {
+      "humans": [],
+      "bots": [],
+      "all": []
+    },
+    "autoreact": [],
+    "autoresponder": [],
+    "serverlog": null,
+    "logdelete": true,
+    "j2c": null,
+    "vcrole": [],
+    "voicemaster": null,
+    "greet": null,
+    "ticket": {
+      "image": null
+    },
+    "afk": {},
+    "nightmode": null,
+    "antialt": {
+      "enabled": false,
+      "minDays": 7
+    },
+    "musicvc": null,
+    "musicrole": null,
+    "upi": {
+      "vpa": "",
+      "name": "VG CHEATS"
+    },
+    "customrole": null,
+    "snipeCache": {}
+  },
+  "1564755697672134797": {
+    "prefix": ".",
+    "enabled": true,
+    "strictModeEvenForOwner": true,
+    "limits": {
+      "BAN": {
+        "count": 1,
+        "perSec": 10
+      },
+      "KICK": {
+        "count": 2,
+        "perSec": 10
+      },
+      "CHANNEL_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "CHANNEL_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "ROLE_CREATE": {
+        "count": 3,
+        "perSec": 15
+      },
+      "ROLE_DELETE": {
+        "count": 2,
+        "perSec": 15
+      },
+      "WEBHOOK": {
+        "count": 2,
+        "perSec": 15
+      },
+      "BOT_ADD": {
+        "count": 1,
+        "perSec": 60
+      },
+      "UNBAN": {
+        "count": 2,
+        "perSec": 15
+      },
+      "GUILD_UPDATE": {
+        "count": 2,
+        "perSec": 20
+      },
+      "MEMBER_ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 15
+      },
+      "EMOJI_DELETE": {
+        "count": 3,
+        "perSec": 20
+      },
+      "PRUNE": {
+        "count": 1,
+        "perSec": 60
+      },
+      "EMOJI_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "INVITE_CREATE": {
+        "count": 4,
+        "perSec": 30
+      },
+      "THREAD": {
+        "count": 4,
+        "perSec": 30
+      },
+      "ROLE_UPDATE": {
+        "count": 4,
+        "perSec": 20
+      },
+      "INTEGRATION": {
+        "count": 2,
+        "perSec": 60
+      },
+      "TIMEOUT_SPAM": {
+        "count": 4,
+        "perSec": 30
+      },
+      "AUTOMOD_RULE": {
+        "count": 2,
+        "perSec": 30
+      },
+      "EVENT_CREATE": {
+        "count": 3,
+        "perSec": 60
+      }
+    },
+    "dayCaps": {
+      "ban": 10,
+      "kick": 10,
+      "wlBan": 5,
+      "wlKick": 5,
+      "windowH": 24
+    },
+    "autoFreeze": true,
+    "protectBotRole": true,
+    "lockdownOnOwnerCompromise": true,
+    "punish": "ban",
+    "zeroTolerance": true,
+    "onlyOwnerCanBan": true,
+    "quarantineRoleName": "⚠️ QUARANTINED",
+    "antiLink": true,
+    "antiEveryone": true,
+    "antiWebhookSpam": true,
+    "linkTimeoutMin": 10,
+    "everyoneTimeoutMin": 10,
+    "linkAllowList": [
+      "discord.gg/",
+      "discord.com/invite/",
+      "youtube.com",
+      "youtu.be"
+    ],
+    "autoRevert": true,
+    "autoBackupHours": 6,
+    "logChannelId": null,
+    "logs": {
+      "antinuke": null,
+      "mod": null,
+      "member": null,
+      "message": null
+    },
+    "roles": {
+      "quarantine": null,
+      "unbypassable": null,
+      "unbypass": null,
+      "event": null,
+      "allMembers": null
+    },
+    "eventRoleId": null,
+    "tickEmoji": null,
+    "crossEmoji": null,
+    "dotEmoji": null,
+    "moduleEmojis": {},
+    "whitelist": [],
+    "extraOwners": [],
+    "automod": {
+      "ghostping": true,
+      "caps": true,
+      "spam": true,
+      "links": true,
+      "invites": true,
+      "maxMentions": 4,
+      "maxLines": 8,
+      "maxCapsPct": 70,
+      "automodWhitelist": [],
+      "bypass": {}
+    },
+    "autorole": {
+      "humans": [],
+      "bots": [],
+      "all": []
+    },
+    "autoreact": [],
+    "autoresponder": [],
+    "serverlog": null,
+    "logdelete": true,
+    "j2c": null,
+    "vcrole": [],
+    "voicemaster": null,
+    "greet": null,
+    "ticket": {
+      "image": null
+    },
+    "afk": {},
+    "nightmode": null,
+    "antialt": {
+      "enabled": false,
+      "minDays": 7
+    },
+    "musicvc": null,
+    "musicrole": null,
+    "upi": {
+      "vpa": "",
+      "name": "VG CHEATS"
+    },
+    "customrole": null,
+    "snipeCache": {}
+  }
+}

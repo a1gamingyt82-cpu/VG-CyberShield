@@ -1,0 +1,1694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>VG Studio • Hardware Master Audio Controller</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-chassis: #191a1e;
+      --bg-panel: #16171a;
+      --accent-neon: #ff007f;
+      --accent-glow: #e024c3;
+      --accent-light: #ff66cc;
+      --text-dim: #5c606b;
+      --text-bright: #e6e8ee;
+      --trench-dark: #0d0e10;
+      --knob-base: #202227;
+      --border-highlight: rgba(255, 255, 255, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #1c1d22 0%, #0d0e11 80%, #050607 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 16px;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--text-bright);
+      overflow-x: hidden;
+    }
+
+    /* Ambient glow behind controller */
+    .viewport-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .ambient-glow {
+      position: absolute;
+      width: 480px;
+      height: 600px;
+      background: radial-gradient(circle, rgba(255, 0, 127, 0.18) 0%, rgba(224, 36, 195, 0.08) 40%, transparent 70%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(50px);
+      pointer-events: none;
+      z-index: 0;
+      animation: ambientPulse 4s ease-in-out infinite alternate;
+    }
+
+    @keyframes ambientPulse {
+      0% { opacity: 0.6; transform: translate(-50%, -50%) scale(0.96); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1.04); }
+    }
+
+    /* Hardware Controller Chassis (Matched to uploaded image) */
+    .controller-chassis {
+      position: relative;
+      z-index: 1;
+      width: 420px;
+      background: radial-gradient(circle at 35% 30%, #212328 0%, #18191c 55%, #121316 100%);
+      border-radius: 36px;
+      padding: 34px 28px 30px;
+      box-shadow: 
+        0 35px 80px rgba(0, 0, 0, 0.88),
+        0 12px 30px rgba(0, 0, 0, 0.6),
+        inset 0 1px 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      background-image: 
+        radial-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 0),
+        radial-gradient(circle at 35% 30%, #212328 0%, #18191c 55%, #121316 100%);
+      background-size: 6px 6px, auto;
+    }
+
+    /* Top Branding Header */
+    .controller-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding: 0 4px;
+    }
+
+    .brand-title {
+      font-family: 'Orbitron', monospace;
+      font-size: 13px;
+      letter-spacing: 2.5px;
+      color: #9297a5;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+    }
+
+    .brand-title span {
+      color: var(--accent-neon);
+      text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+      font-weight: 900;
+    }
+
+    .status-badge {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      padding: 3px 10px;
+      background: rgba(255, 0, 127, 0.12);
+      border: 1px solid rgba(255, 0, 127, 0.3);
+      border-radius: 12px;
+      color: var(--accent-light);
+      text-shadow: 0 0 8px rgba(255, 0, 127, 0.5);
+    }
+
+    /* Top Row Layout: Wheel Knob on Left + Power & Vertical Slider on Right */
+    .top-controls-row {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 30px;
+    }
+
+    /* ===== ROTARY PANNER WHEEL (HEADPHONE LEFT / RIGHT) ===== */
+    .knob-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .knob-bezel {
+      position: relative;
+      width: 176px;
+      height: 176px;
+      border-radius: 50%;
+      background: #131417;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 
+        inset 0 6px 14px rgba(0, 0, 0, 0.95),
+        inset 0 -2px 6px rgba(255, 255, 255, 0.04),
+        0 2px 4px rgba(255, 255, 255, 0.03);
+      cursor: ns-resize;
+    }
+
+    /* Ambient Outer Ring Arc (glowing neon magenta like photo) */
+    .knob-glow-ring {
+      position: absolute;
+      inset: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      filter: drop-shadow(0 0 12px rgba(255, 0, 127, 0.75));
+    }
+
+    .knob-glow-ring svg {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+    }
+
+    .ring-bg-track {
+      fill: none;
+      stroke: #22242a;
+      stroke-width: 5;
+    }
+
+    .ring-neon-arc {
+      fill: none;
+      stroke: url(#neonGradient);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 480;
+      stroke-dashoffset: 240;
+      transition: stroke-dashoffset 0.08s ease-out;
+    }
+
+    /* Flare LED on the arc */
+    .flare-led {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 
+        0 0 10px #ffffff,
+        0 0 20px #ff007f,
+        0 0 35px #ff007f;
+      top: 14px;
+      left: 36px;
+      pointer-events: none;
+      opacity: 0.95;
+    }
+
+    /* Inner 3D Dial Knob */
+    .knob-body {
+      width: 118px;
+      height: 118px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #2a2c33 0%, #1b1c20 60%, #121316 100%);
+      box-shadow: 
+        0 12px 24px rgba(0, 0, 0, 0.8),
+        0 4px 8px rgba(0, 0, 0, 0.5),
+        inset 0 2px 3px rgba(255, 255, 255, 0.12),
+        inset 0 -3px 5px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.05s ease-out;
+      cursor: grab;
+    }
+
+    .knob-body:active {
+      cursor: grabbing;
+      box-shadow: 
+        0 6px 14px rgba(0, 0, 0, 0.9),
+        inset 0 1px 2px rgba(255, 255, 255, 0.08);
+    }
+
+    /* Dot Marker on Knob Face */
+    .knob-marker-dot {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #111214;
+      top: 18px;
+      box-shadow: 
+        inset 0 2px 4px rgba(0, 0, 0, 0.95),
+        0 1px 1px rgba(255, 255, 255, 0.05);
+    }
+
+    .knob-label-wrap {
+      margin-top: 10px;
+      text-align: center;
+    }
+
+    .knob-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #6e7380;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+
+    .knob-readout {
+      font-family: 'Orbitron', monospace;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--accent-light);
+      text-shadow: 0 0 10px rgba(255, 0, 127, 0.6);
+    }
+
+    .knob-hint {
+      font-size: 9px;
+      color: #555963;
+      margin-top: 2px;
+    }
+
+    /* ===== RIGHT SIDE: POWER BUTTONS & VERTICAL VOLUME SLIDER ===== */
+    .right-rack {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+    }
+
+    /* Dual Power Buttons */
+    .power-buttons-row {
+      display: flex;
+      gap: 14px;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .power-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #222429 0%, #17181c 65%, #0f1013 100%);
+      box-shadow: 
+        0 6px 14px rgba(0, 0, 0, 0.7),
+        inset 0 1px 2px rgba(255, 255, 255, 0.08),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .power-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: none;
+      stroke: #454852;
+      stroke-width: 2.2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: all 0.25s ease;
+    }
+
+    .power-btn.active {
+      box-shadow: 
+        0 4px 12px rgba(0, 0, 0, 0.8),
+        inset 0 2px 4px rgba(0, 0, 0, 0.9),
+        0 0 16px rgba(255, 0, 127, 0.35);
+    }
+
+    .power-btn.active svg {
+      stroke: var(--accent-neon);
+      filter: drop-shadow(0 0 6px var(--accent-neon)) drop-shadow(0 0 12px var(--accent-glow));
+    }
+
+    /* Vertical Fader Unit with Calibration Tick Marks */
+    .vertical-fader-unit {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 6px 0;
+    }
+
+    /* Scale Ticks */
+    .ticks-col {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: 110px;
+    }
+
+    .tick {
+      width: 7px;
+      height: 1.5px;
+      background: #333640;
+    }
+
+    .tick.major {
+      width: 11px;
+      background: #505463;
+    }
+
+    /* Vertical Slot Trench */
+    .fader-trench {
+      position: relative;
+      width: 18px;
+      height: 116px;
+      background: #0f1013;
+      border-radius: 9px;
+      box-shadow: 
+        inset 0 3px 8px rgba(0, 0, 0, 0.95),
+        inset 0 -2px 4px rgba(255, 255, 255, 0.03),
+        0 1px 2px rgba(255, 255, 255, 0.02);
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    /* Glowing Hot Pink Level Track */
+    .fader-neon-track {
+      position: absolute;
+      bottom: 8px;
+      width: 3px;
+      height: 70%;
+      background: linear-gradient(to top, #e024c3, #ff007f);
+      border-radius: 2px;
+      box-shadow: 
+        0 0 8px rgba(255, 0, 127, 0.8),
+        0 0 16px rgba(255, 0, 127, 0.4);
+      pointer-events: none;
+      transition: height 0.05s ease-out;
+    }
+
+    /* Fader Thumb (Horizontal grooved slider) */
+    .fader-thumb {
+      position: absolute;
+      width: 32px;
+      height: 18px;
+      background: radial-gradient(circle at 45% 35%, #2a2c32 0%, #1b1c20 70%, #121316 100%);
+      border-radius: 6px;
+      box-shadow: 
+        0 4px 10px rgba(0, 0, 0, 0.8),
+        inset 0 1px 1px rgba(255, 255, 255, 0.15),
+        inset 0 -1px 2px rgba(0, 0, 0, 0.9);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      left: 50%;
+      transform: translate(-50%, 50%);
+      bottom: 70%;
+      cursor: grab;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      gap: 2px;
+      z-index: 2;
+    }
+
+    .fader-thumb:active {
+      cursor: grabbing;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .fader-thumb-groove {
+      width: 18px;
+      height: 1.5px;
+      background: #0d0e11;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1px;
+    }
+
+    .fader-label {
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      color: #6e7380;
+      text-transform: uppercase;
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    .fader-val {
+      font-family: 'Orbitron', monospace;
+      font-size: 11px;
+      color: var(--accent-light);
+      text-align: center;
+      text-shadow: 0 0 8px rgba(255, 0, 127, 0.6);
+    }
+
+    /* ===== MIDDLE SECTION: CLUSTERED MEDIA CONTROLS & MINI TOGGLES ===== */
+    .middle-controls-grid {
+      display: grid;
+      grid-template-columns: 210px 1fr;
+      gap: 16px;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .capsule-cluster-col {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    /* Grouped Pill Capsule: Prev | Main Button | Next */
+    .media-capsule {
+      display: flex;
+      align-items: center;
+      background: #131417;
+      border-radius: 30px;
+      padding: 3px;
+      box-shadow: 
+        inset 0 3px 8px rgba(0, 0, 0, 0.9),
+        0 1px 2px rgba(255, 255, 255, 0.03);
+      width: fit-content;
+    }
+
+    .capsule-btn-side {
+      width: 44px;
+      height: 38px;
+      border-radius: 20px;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #797d8b;
+      transition: all 0.15s ease;
+    }
+
+    .capsule-btn-side:hover {
+      color: var(--text-bright);
+    }
+
+    .capsule-btn-side:active {
+      transform: scale(0.92);
+      color: var(--accent-neon);
+    }
+
+    .capsule-btn-side svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Main Center Button (Raised circular knob with neon glow) */
+    .capsule-btn-center {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 40% 35%, #2a2c32 0%, #1b1c20 65%, #121316 100%);
+      box-shadow: 
+        0 6px 14px rgba(0, 0, 0, 0.75),
+        inset 0 1px 2px rgba(255, 255, 255, 0.1),
+        inset 0 -2px 4px rgba(0, 0, 0, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      margin: 0 -2px;
+      z-index: 2;
+    }
+
+    .capsule-btn-center:hover {
+      box-shadow: 
+        0 8px 18px rgba(0, 0, 0, 0.85),
+        0 0 16px rgba(255, 0, 127, 0.35);
+      transform: scale(1.03);
+    }
+
+    .capsule-btn-center:active {
+      transform: scale(0.95);
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.9);
+    }
+
+    .capsule-btn-center svg {
+      fill: var(--accent-neon);
+      filter: drop-shadow(0 0 8px var(--accent-neon)) drop-shadow(0 0 16px var(--accent-glow));
+      transition: transform 0.15s ease;
+    }
+
+    .capsule-btn-center.play-btn svg {
+      width: 18px;
+      height: 18px;
+      margin-left: 2px;
+    }
+
+    .capsule-btn-center.stop-btn svg {
+      width: 15px;
+      height: 15px;
+    }
+
+    /* Right Side Mini Toggles & Indicators */
+    .mini-controls-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .mini-switches-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* Neumorphic Mini Toggle Switch */
+    .mini-toggle {
+      width: 38px;
+      height: 18px;
+      border-radius: 10px;
+      background: #111215;
+      box-shadow: 
+        inset 0 2px 5px rgba(0, 0, 0, 0.95),
+        0 1px 1px rgba(255, 255, 255, 0.02);
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .mini-toggle-thumb {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: #25272d;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.7);
+      top: 2px;
+      left: 2px;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .mini-toggle.active .mini-toggle-thumb {
+      left: 22px;
+      background: #ffffff;
+      box-shadow: 
+        0 0 8px #ff007f,
+        0 0 14px #ff007f;
+    }
+
+    /* 8D Auto-Rotate Badge & Speed Chips */
+    .rotator-badge-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      background: #141518;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.8), 0 1px 2px rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      color: #727785;
+      transition: all 0.25s ease;
+    }
+
+    .rotator-badge-btn:hover {
+      color: #fff;
+      border-color: rgba(255, 0, 127, 0.3);
+    }
+
+    .rotator-badge-btn.active {
+      background: rgba(255, 0, 127, 0.14);
+      color: #ff33aa;
+      border-color: #ff007f;
+      box-shadow: 0 0 14px rgba(255, 0, 127, 0.4), inset 0 1px 3px rgba(0, 0, 0, 0.6);
+    }
+
+    .pulse-ring {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #444752;
+      transition: all 0.25s ease;
+    }
+
+    .rotator-badge-btn.active .pulse-ring {
+      background: #ffffff;
+      box-shadow: 0 0 8px #ff007f, 0 0 16px #ff007f;
+      animation: pulseLed 1.2s infinite alternate;
+    }
+
+    @keyframes pulseLed {
+      0% { transform: scale(0.85); opacity: 0.8; }
+      100% { transform: scale(1.25); opacity: 1; }
+    }
+
+    .speed-selector-row {
+      display: flex;
+      gap: 4px;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
+
+    .speed-selector-row.enabled {
+      opacity: 1;
+    }
+
+    .speed-chip {
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #131417;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      color: #6a6f7d;
+      font-size: 9px;
+      font-weight: 700;
+      font-family: 'Orbitron', monospace;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .speed-chip:hover {
+      color: #fff;
+    }
+
+    .speed-chip.active {
+      background: #252831;
+      color: var(--accent-light);
+      border-color: rgba(255, 0, 127, 0.5);
+      box-shadow: 0 0 8px rgba(255, 0, 127, 0.3);
+    }
+
+    /* Mini Dual Skip Button Pill */
+    .mini-dual-btn {
+      display: flex;
+      background: #121316;
+      border-radius: 16px;
+      padding: 2px;
+      box-shadow: 
+        inset 0 2px 6px rgba(0, 0, 0, 0.9),
+        0 1px 2px rgba(255, 255, 255, 0.02);
+    }
+
+    .mini-sub-btn {
+      width: 44px;
+      height: 28px;
+      border-radius: 12px;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: var(--accent-neon);
+      filter: drop-shadow(0 0 6px rgba(255, 0, 127, 0.5));
+      transition: all 0.15s ease;
+    }
+
+    .mini-sub-btn:active {
+      transform: scale(0.92);
+      filter: drop-shadow(0 0 10px var(--accent-neon));
+    }
+
+    .mini-sub-btn svg {
+      width: 14px;
+      height: 14px;
+      fill: currentColor;
+    }
+
+    /* Status Indicators Row (Dot, Glowing Dot, Square, Checkmark) */
+    .status-dots-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 4px 0;
+    }
+
+    .indicator-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #3b3e48;
+      font-size: 11px;
+    }
+
+    .ind-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #1d1e23;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+
+    .ind-dot.glow {
+      background: #ffffff;
+      box-shadow: 
+        0 0 8px #ff007f,
+        0 0 16px #ff007f;
+    }
+
+    .ind-sq {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      background: #1d1e23;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.9);
+    }
+
+    .ind-check {
+      font-weight: 900;
+      color: var(--accent-neon);
+      filter: drop-shadow(0 0 6px var(--accent-neon));
+    }
+
+    /* ===== BOTTOM PROGRESS / SEEKBAR ===== */
+    .bottom-seekbar-section {
+      margin-top: 12px;
+      position: relative;
+      padding: 0 4px;
+    }
+
+    .seekbar-tooltip {
+      position: absolute;
+      top: -24px;
+      left: 70%;
+      transform: translateX(-50%);
+      background: #1b1c20;
+      color: var(--text-bright);
+      font-size: 10px;
+      font-weight: 700;
+      font-family: 'Orbitron', monospace;
+      padding: 2px 7px;
+      border-radius: 6px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.6);
+      pointer-events: none;
+      transition: left 0.05s ease-out;
+    }
+
+    .seekbar-trench {
+      width: 100%;
+      height: 10px;
+      background: #0f1013;
+      border-radius: 5px;
+      box-shadow: 
+        inset 0 2px 5px rgba(0, 0, 0, 0.95),
+        0 1px 1px rgba(255, 255, 255, 0.03);
+      position: relative;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+    }
+
+    .seekbar-neon-fill {
+      position: absolute;
+      left: 0;
+      top: 3px;
+      bottom: 3px;
+      width: 70%;
+      background: linear-gradient(90deg, #e024c3, #ff007f);
+      border-radius: 3px;
+      box-shadow: 
+        0 0 10px rgba(255, 0, 127, 0.8),
+        0 0 20px rgba(255, 0, 127, 0.4);
+      pointer-events: none;
+      transition: width 0.05s ease-out;
+    }
+
+    .seekbar-thumb {
+      position: absolute;
+      left: 70%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 
+        0 0 10px #ff007f,
+        0 0 20px #ff007f;
+      cursor: grab;
+      z-index: 3;
+      transition: left 0.05s ease-out;
+    }
+
+    .seekbar-thumb:active {
+      cursor: grabbing;
+      transform: translate(-50%, -50%) scale(1.15);
+    }
+
+    /* Audio Live Visualizer & Track Info Card below controller */
+    .track-details-card {
+      margin-top: 20px;
+      width: 420px;
+      background: rgba(20, 21, 25, 0.75);
+      border-radius: 20px;
+      padding: 16px 20px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .track-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .track-meta h4 {
+      font-size: 13px;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .track-meta p {
+      font-size: 11px;
+      color: #7b808e;
+    }
+
+    .live-vu-meter {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 24px;
+    }
+
+    .vu-bar {
+      width: 4px;
+      height: 6px;
+      background: var(--accent-neon);
+      border-radius: 2px;
+      box-shadow: 0 0 6px var(--accent-neon);
+      transition: height 0.08s ease;
+    }
+
+    .audio-source-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .src-btn {
+      flex: 1;
+      padding: 7px 12px;
+      background: #1d1f25;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      color: #9ea4b4;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .src-btn:hover {
+      background: #262932;
+      color: #ffffff;
+      border-color: rgba(255, 0, 127, 0.4);
+    }
+
+    .src-btn.active {
+      background: rgba(255, 0, 127, 0.15);
+      color: var(--accent-light);
+      border-color: var(--accent-neon);
+      box-shadow: 0 0 10px rgba(255, 0, 127, 0.3);
+    }
+
+    #audioFileInput {
+      display: none;
+    }
+
+    /* Interactive Instruction Pill */
+    .instruction-pill {
+      margin-top: 16px;
+      font-size: 11px;
+      color: #7d8290;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .instruction-pill strong {
+      color: var(--accent-light);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="viewport-wrapper">
+    <div class="ambient-glow"></div>
+
+    <!-- Main Hardware Music Controller Chassis -->
+    <div class="controller-chassis" id="controllerChassis">
+      
+      <!-- Top Branding -->
+      <div class="controller-header">
+        <div class="brand-title">
+          <span>VG</span> STUDIO • MASTER
+        </div>
+        <div class="status-badge" id="engineStatusBadge">● 3D STEREO ACTIVE</div>
+      </div>
+
+      <!-- Top Row: Rotary Pan Knob (Headphone Left/Right) & Vertical Fader -->
+      <div class="top-controls-row">
+        
+        <!-- Large Rotary Pan Knob (Scroll wheel Left/Right pan) -->
+        <div class="knob-container">
+          <div class="knob-bezel" id="panKnobBezel" title="Scroll wheel up/down or drag to pan sound to Left/Right ear">
+            
+            <!-- Neon Glowing Circular Arc -->
+            <div class="knob-glow-ring">
+              <svg viewBox="0 0 160 160">
+                <defs>
+                  <linearGradient id="neonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#ff007f" />
+                    <stop offset="50%" stop-color="#e024c3" />
+                    <stop offset="100%" stop-color="#ff33aa" />
+                  </linearGradient>
+                </defs>
+                <circle class="ring-bg-track" cx="80" cy="80" r="68"></circle>
+                <circle class="ring-neon-arc" id="neonArc" cx="80" cy="80" r="68"></circle>
+              </svg>
+            </div>
+
+            <!-- Glowing Flare Bead -->
+            <div class="flare-led" id="flareLed"></div>
+
+            <!-- The Rotating Knob -->
+            <div class="knob-body" id="panKnob">
+              <div class="knob-marker-dot"></div>
+            </div>
+          </div>
+
+          <div class="knob-label-wrap">
+            <div class="knob-title">HEADPHONE STEREO PAN</div>
+            <div class="knob-readout" id="panReadout">CENTER (0.00)</div>
+            <div class="knob-hint">🖱️ Scroll Wheel • Drag Left / Right</div>
+          </div>
+        </div>
+
+        <!-- Right Side: Dual Power Buttons & Vertical Volume Fader -->
+        <div class="right-rack">
+          
+          <!-- Dual Power Buttons -->
+          <div class="power-buttons-row">
+            <button class="power-btn" id="powerOffBtn" title="Standby">
+              <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/></svg>
+            </button>
+            <button class="power-btn active" id="powerOnBtn" title="Master Power On">
+              <svg viewBox="0 0 24 24"><path d="M18.36 6.64a9 9 0 1 1-12.73 0M12 2v10"/></svg>
+            </button>
+          </div>
+
+          <!-- Vertical Volume Fader with Calibration Ticks -->
+          <div class="vertical-fader-unit">
+            
+            <!-- Left Calibration Ticks -->
+            <div class="ticks-col">
+              <div class="tick major"></div>
+              <div class="tick"></div>
+              <div class="tick"></div>
+              <div class="tick major"></div>
+              <div class="tick"></div>
+              <div class="tick"></div>
+              <div class="tick major"></div>
+              <div class="tick"></div>
+              <div class="tick"></div>
+              <div class="tick major"></div>
+            </div>
+
+            <!-- Vertical Slot Trench -->
+            <div class="fader-trench" id="faderTrench" title="Click or Drag Up/Down to adjust Volume">
+              <div class="fader-neon-track" id="faderTrack"></div>
+              <div class="fader-thumb" id="faderThumb">
+                <div class="fader-thumb-groove"></div>
+                <div class="fader-thumb-groove"></div>
+                <div class="fader-thumb-groove"></div>
+              </div>
+            </div>
+
+            <!-- Right Calibration Ticks -->
+            <div class="ticks-col">
+              <div class="tick major"></div>
+              <div class="tick"></div>
+              <div class="tick"></div>
+              <div class="tick major"></div>
+              <div class="tick"></div>
+              <div class="tick"></div>
+              <div class="tick major"></div>
+              <div class="tick"></div>
+              <div class="tick"></div>
+              <div class="tick major"></div>
+            </div>
+
+          </div>
+
+          <div>
+            <div class="fader-label">VOLUME</div>
+            <div class="fader-val" id="volumeReadout">70%</div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Middle Controls: Clustered Capsule Rows & Mini Switches -->
+      <div class="middle-controls-grid">
+        
+        <!-- Left Column: Two Capsule Button Pods -->
+        <div class="capsule-cluster-col">
+          
+          <!-- Pod 1: Prev | Play/Pause | Next -->
+          <div class="media-capsule">
+            <button class="capsule-btn-side" id="btnPrev" title="Previous Track">
+              <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+            </button>
+            <button class="capsule-btn-center play-btn" id="btnPlayPause" title="Play / Pause">
+              <svg id="playIcon" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            <button class="capsule-btn-side" id="btnNext" title="Next Track">
+              <svg viewBox="0 0 24 24"><path d="m6 18 8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
+          </div>
+
+          <!-- Pod 2: Rewind | Stop | Fast-Forward -->
+          <div class="media-capsule">
+            <button class="capsule-btn-side" id="btnRewind" title="Rewind 5s">
+              <svg viewBox="0 0 24 24"><path d="M11 18V6l-8.5 6 8.5 6zm.5-6 8.5 6V6l-8.5 6z"/></svg>
+            </button>
+            <button class="capsule-btn-center stop-btn" id="btnStop" title="Stop Audio">
+              <svg viewBox="0 0 24 24"><path d="M6 6h12v12H6z"/></svg>
+            </button>
+            <button class="capsule-btn-side" id="btnForward" title="Fast-Forward 5s">
+              <svg viewBox="0 0 24 24"><path d="m13 6 8.5 6-8.5 6V6zm-9 0 8.5 6-8.5 6V6z"/></svg>
+            </button>
+          </div>
+
+        </div>
+
+        <!-- Right Column: Mini Switches, Dual Buttons, Status Dots -->
+        <div class="mini-controls-col">
+          
+          <!-- Mini Horizontal Toggles -->
+          <div class="mini-switches-row">
+            <div class="mini-toggle" id="toggleBass" title="Bass Boost EQ">
+              <div class="mini-toggle-thumb"></div>
+            </div>
+            <div class="mini-toggle active" id="toggleStereo" title="8D Audio Spatial Surround">
+              <div class="mini-toggle-thumb"></div>
+            </div>
+          </div>
+
+          <!-- 8D Audio Auto-Rotate Control -->
+          <div class="rotator-badge-btn active" id="btn8D" title="Toggle 8D Auto-Rotate (Swirls sound continuously between Left & Right ear)">
+            <span class="pulse-ring"></span>
+            <span class="btn8d-text">8D AUTO-ROTATE</span>
+          </div>
+
+          <div class="speed-selector-row enabled" id="speedSelectorRow">
+            <button class="speed-chip active" data-speed="slow" title="Slow Smooth Swirl">SLOW</button>
+            <button class="speed-chip" data-speed="med" title="Medium Swirl">MED</button>
+            <button class="speed-chip" data-speed="fast" title="Fast Swirl">FAST</button>
+          </div>
+
+          <!-- Capsule Mini Dual Skip -->
+          <div class="mini-dual-btn">
+            <button class="mini-sub-btn" id="miniPrev" title="Quick Skip Back">
+              <svg viewBox="0 0 24 24"><path d="M6 6h2v12H6zm3.5 6 8.5 6V6z"/></svg>
+            </button>
+            <button class="mini-sub-btn" id="miniNext" title="Quick Skip Forward">
+              <svg viewBox="0 0 24 24"><path d="m6 18 8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+            </button>
+          </div>
+
+          <!-- Status Indicators Row -->
+          <div class="status-dots-row">
+            <div class="indicator-item"><div class="ind-dot"></div></div>
+            <div class="indicator-item"><div class="ind-dot glow"></div></div>
+            <div class="indicator-item"><div class="ind-sq"></div></div>
+            <div class="indicator-item"><span class="ind-check">✓</span></div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Bottom Progress Seekbar -->
+      <div class="bottom-seekbar-section">
+        <div class="seekbar-tooltip" id="seekTooltip">70%</div>
+        <div class="seekbar-trench" id="seekbarTrench">
+          <div class="seekbar-neon-fill" id="seekFill"></div>
+          <div class="seekbar-thumb" id="seekThumb"></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Audio Player Dashboard & File Loader Card -->
+    <div class="track-details-card">
+      <div class="track-row">
+        <div class="track-meta">
+          <h4 id="songTitle">CyberShield Studio • 8D Synth Groove</h4>
+          <p id="songArtist">Stereo Panning Engine • 24/7 Live WebVC</p>
+        </div>
+        <div class="live-vu-meter" id="vuMeter">
+          <div class="vu-bar"></div>
+          <div class="vu-bar"></div>
+          <div class="vu-bar"></div>
+          <div class="vu-bar"></div>
+          <div class="vu-bar"></div>
+        </div>
+      </div>
+
+      <div class="audio-source-row">
+        <button class="src-btn active" id="srcDemoBtn">⚡ Live Synth Demo</button>
+        <button class="src-btn" id="srcUploadBtn">📁 Load Audio File</button>
+        <input type="file" id="audioFileInput" accept="audio/*">
+      </div>
+    </div>
+
+    <div class="instruction-pill">
+      🎧 Wear headphones! <strong>Scroll Wheel</strong> on the big knob moves sound Left & Right. Drag <strong>Slider</strong> Up/Down for Volume.
+    </div>
+
+  </div>
+
+  <script>
+    // ===== WEB AUDIO API ENGINE (STEREO PANNER + GAIN + SYNTH/AUDIO) =====
+    let audioCtx = null;
+    let stereoPanner = null;
+    let masterGain = null;
+    let bassFilter = null;
+    let isPlaying = false;
+    let panValue = 0.0;     // -1.0 (Full Left) to +1.0 (Full Right)
+    let volumeValue = 0.7;  // 0.0 to 1.0 (70% initial)
+    let isBassBoost = false;
+    let isSpatial3D = true;
+    let seekPercent = 70;
+
+    // Synth Demo Audio Engine variables
+    let synthInterval = null;
+    let uploadedAudio = null;
+    let uploadedSourceNode = null;
+
+    function initAudio() {
+      if (audioCtx) return;
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioCtx = new AudioContext();
+
+      // Master Gain Node (Volume control via vertical slider)
+      masterGain = audioCtx.createGain();
+      masterGain.gain.value = volumeValue;
+
+      // Stereo Panner Node (Ear panning Left/Right via big rotary wheel)
+      if (audioCtx.createStereoPanner) {
+        stereoPanner = audioCtx.createStereoPanner();
+        stereoPanner.pan.value = panValue;
+      } else {
+        // Fallback for older browsers
+        stereoPanner = audioCtx.createPanner();
+        stereoPanner.panningModel = 'equalpower';
+        stereoPanner.setPosition(panValue, 0, 1 - Math.abs(panValue));
+      }
+
+      // Bass boost filter
+      bassFilter = audioCtx.createBiquadFilter();
+      bassFilter.type = 'lowshelf';
+      bassFilter.frequency.value = 250;
+      bassFilter.gain.value = isBassBoost ? 10 : 0;
+
+      // Connect nodes: Source -> BassFilter -> StereoPanner -> MasterGain -> Destination
+      bassFilter.connect(stereoPanner);
+      stereoPanner.connect(masterGain);
+      masterGain.connect(audioCtx.destination);
+    }
+
+    // High quality dynamic polyphonic 8D synth loop generator (Zero external dependencies)
+    function startSynthLoop() {
+      if (synthInterval) clearInterval(synthInterval);
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+
+      const notes = [261.63, 329.63, 392.00, 523.25, 440.00, 392.00, 349.23, 329.63];
+      const bassNotes = [130.81, 164.81, 196.00, 220.00];
+      let step = 0;
+
+      synthInterval = setInterval(() => {
+        if (!isPlaying || !audioCtx) return;
+
+        const time = audioCtx.currentTime;
+
+        // Lead synth note
+        const osc = audioCtx.createOscillator();
+        const noteGain = audioCtx.createGain();
+        osc.type = step % 4 === 0 ? 'sawtooth' : 'triangle';
+        osc.frequency.setValueAtTime(notes[step % notes.length], time);
+
+        noteGain.gain.setValueAtTime(0.18, time);
+        noteGain.gain.exponentialRampToValueAtTime(0.001, time + 0.28);
+
+        osc.connect(noteGain);
+        noteGain.connect(bassFilter);
+        osc.start(time);
+        osc.stop(time + 0.3);
+
+        // Bass punch
+        if (step % 2 === 0) {
+          const bassOsc = audioCtx.createOscillator();
+          const bassGain = audioCtx.createGain();
+          bassOsc.type = 'sine';
+          bassOsc.frequency.setValueAtTime(bassNotes[(step / 2) % bassNotes.length], time);
+          bassGain.gain.setValueAtTime(0.26, time);
+          bassGain.gain.exponentialRampToValueAtTime(0.001, time + 0.4);
+
+          bassOsc.connect(bassGain);
+          bassGain.connect(bassFilter);
+          bassOsc.start(time);
+          bassOsc.stop(time + 0.42);
+        }
+
+        // Animate VU Meter bars
+        animateVuMeter();
+
+        // Increment seekbar simulation
+        seekPercent = (seekPercent + 0.4) % 100;
+        updateSeekbarUI(seekPercent);
+
+        step++;
+      }, 160);
+    }
+
+    function stopSynthLoop() {
+      if (synthInterval) {
+        clearInterval(synthInterval);
+        synthInterval = null;
+      }
+      if (uploadedAudio) {
+        uploadedAudio.pause();
+      }
+      resetVuMeter();
+    }
+
+    // ===== STEREO PANNER LOGIC (KNOB & SCROLL WHEEL) =====
+    const panKnob = document.getElementById('panKnob');
+    const panKnobBezel = document.getElementById('panKnobBezel');
+    const neonArc = document.getElementById('neonArc');
+    const flareLed = document.getElementById('flareLed');
+    const panReadout = document.getElementById('panReadout');
+
+    function updatePanUI(pan, from8D = false) {
+      panValue = Math.max(-1.0, Math.min(1.0, pan));
+
+      // Audio engine update
+      if (stereoPanner && audioCtx) {
+        if (stereoPanner.pan) {
+          stereoPanner.pan.setValueAtTime(panValue, audioCtx.currentTime);
+        } else {
+          stereoPanner.setPosition(panValue, 0, 1 - Math.abs(panValue));
+        }
+      }
+
+      // Visual Rotation (-135deg to +135deg)
+      const rotationAngle = panValue * 135;
+      panKnob.style.transform = `rotate(${rotationAngle}deg)`;
+
+      // Neon Arc progress
+      // Circumference = 2 * PI * 68 = 427.25
+      const offset = 240 - (panValue * 120);
+      neonArc.style.strokeDashoffset = offset;
+
+      // Update Readout Text
+      const prefix = from8D ? '8D: ' : '';
+      if (Math.abs(panValue) < 0.05) {
+        panReadout.textContent = `${prefix}CENTER (0.00)`;
+        panReadout.style.color = 'var(--accent-light)';
+      } else if (panValue < 0) {
+        const pct = Math.round(Math.abs(panValue) * 100);
+        panReadout.textContent = `${prefix}LEFT ◄ ${pct}%`;
+        panReadout.style.color = '#ff33aa';
+      } else {
+        const pct = Math.round(panValue * 100);
+        panReadout.textContent = `${prefix}${pct}% ► RIGHT`;
+        panReadout.style.color = '#00f0ff';
+      }
+    }
+
+    // ===== 8D AUDIO AUTO-ROTATOR (LFO SWIRL ENGINE) =====
+    let is8DActive = true;
+    let rotatorSpeedMode = 'slow'; // 'slow', 'med', 'fast'
+    let rotatorAngle = 0;
+    let rotatorAnimFrame = null;
+
+    const btn8D = document.getElementById('btn8D');
+    const speedSelectorRow = document.getElementById('speedSelectorRow');
+    const speedChips = document.querySelectorAll('.speed-chip');
+    const toggleStereo = document.getElementById('toggleStereo');
+
+    const speedStepMap = {
+      slow: 0.012, // ~8.7s smooth full swirl
+      med: 0.024,  // ~4.3s medium swirl
+      fast: 0.048  // ~2.2s rapid swirl
+    };
+
+    function start8DAutoRotator() {
+      if (rotatorAnimFrame) cancelAnimationFrame(rotatorAnimFrame);
+      is8DActive = true;
+      if (btn8D) btn8D.classList.add('active');
+      if (speedSelectorRow) speedSelectorRow.classList.add('enabled');
+      if (toggleStereo) toggleStereo.classList.add('active');
+
+      function rotatorLoop() {
+        if (!is8DActive) return;
+        const step = speedStepMap[rotatorSpeedMode] || 0.012;
+        rotatorAngle += step;
+        const currentPan = Math.sin(rotatorAngle); // Smooth -1.0 to +1.0 sinusoidal wave
+        updatePanUI(currentPan, true);
+        rotatorAnimFrame = requestAnimationFrame(rotatorLoop);
+      }
+      rotatorAnimFrame = requestAnimationFrame(rotatorLoop);
+    }
+
+    function stop8DAutoRotator() {
+      is8DActive = false;
+      if (rotatorAnimFrame) {
+        cancelAnimationFrame(rotatorAnimFrame);
+        rotatorAnimFrame = null;
+      }
+      if (btn8D) btn8D.classList.remove('active');
+      if (speedSelectorRow) speedSelectorRow.classList.remove('enabled');
+      if (toggleStereo) toggleStereo.classList.remove('active');
+    }
+
+    if (btn8D) {
+      btn8D.addEventListener('click', () => {
+        initAudio();
+        if (is8DActive) {
+          stop8DAutoRotator();
+        } else {
+          start8DAutoRotator();
+        }
+      });
+    }
+
+    speedChips.forEach(chip => {
+      chip.addEventListener('click', () => {
+        speedChips.forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        rotatorSpeedMode = chip.dataset.speed;
+        if (!is8DActive) {
+          start8DAutoRotator();
+        }
+      });
+    });
+
+    // 1. Mouse Scroll Wheel Control on Knob
+    panKnobBezel.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      initAudio();
+      if (is8DActive) {
+        // Switch to manual control when user rolls the mouse scroll wheel
+        stop8DAutoRotator();
+      }
+      const delta = e.deltaY < 0 ? 0.08 : -0.08;
+      updatePanUI(panValue + delta);
+    }, { passive: false });
+
+    // 2. Mouse Drag Control on Knob
+    let isDraggingKnob = false;
+    let startY = 0;
+    let startPan = 0;
+
+    panKnob.addEventListener('mousedown', (e) => {
+      initAudio();
+      if (is8DActive) {
+        // Switch to manual control when user clicks and drags knob
+        stop8DAutoRotator();
+      }
+      isDraggingKnob = true;
+      startY = e.clientY;
+      startPan = panValue;
+      document.body.style.cursor = 'ns-resize';
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDraggingKnob) return;
+      const dy = startY - e.clientY; // drag up = pan right, drag down = pan left
+      const newPan = startPan + (dy / 90);
+      updatePanUI(newPan);
+    });
+
+    window.addEventListener('mouseup', () => {
+      if (isDraggingKnob) {
+        isDraggingKnob = false;
+        document.body.style.cursor = 'default';
+      }
+    });
+
+    // ===== VERTICAL VOLUME FADER LOGIC =====
+    const faderTrench = document.getElementById('faderTrench');
+    const faderThumb = document.getElementById('faderThumb');
+    const faderTrack = document.getElementById('faderTrack');
+    const volumeReadout = document.getElementById('volumeReadout');
+
+    function updateVolumeUI(volPct) {
+      const pct = Math.max(0, Math.min(100, volPct));
+      volumeValue = pct / 100;
+
+      faderThumb.style.bottom = `${pct}%`;
+      faderTrack.style.height = `${pct}%`;
+      volumeReadout.textContent = `${Math.round(pct)}%`;
+
+      if (masterGain && audioCtx) {
+        masterGain.gain.setValueAtTime(volumeValue, audioCtx.currentTime);
+      }
+    }
+
+    let isDraggingFader = false;
+
+    function handleFaderPointer(e) {
+      const rect = faderTrench.getBoundingClientRect();
+      const relativeY = rect.bottom - e.clientY;
+      const pct = (relativeY / rect.height) * 100;
+      updateVolumeUI(pct);
+    }
+
+    faderTrench.addEventListener('mousedown', (e) => {
+      initAudio();
+      isDraggingFader = true;
+      handleFaderPointer(e);
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDraggingFader) return;
+      handleFaderPointer(e);
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDraggingFader = false;
+    });
+
+    // ===== MEDIA BUTTONS: PLAY / PAUSE / STOP / SEEK =====
+    const btnPlayPause = document.getElementById('btnPlayPause');
+    const playIcon = document.getElementById('playIcon');
+    const btnStop = document.getElementById('btnStop');
+    const engineStatusBadge = document.getElementById('engineStatusBadge');
+
+    function togglePlay() {
+      initAudio();
+      isPlaying = !isPlaying;
+
+      if (isPlaying) {
+        if (uploadedAudio && uploadedAudio.src) {
+          uploadedAudio.play();
+        } else {
+          startSynthLoop();
+        }
+        playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>'; // Pause icon
+        btnPlayPause.style.boxShadow = '0 0 25px rgba(255, 0, 127, 0.7)';
+        engineStatusBadge.textContent = '● PLAYING LIVE';
+        engineStatusBadge.style.color = '#00ff88';
+        engineStatusBadge.style.borderColor = '#00ff88';
+      } else {
+        stopSynthLoop();
+        playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>'; // Play icon
+        btnPlayPause.style.boxShadow = '';
+        engineStatusBadge.textContent = '⏸ PAUSED';
+        engineStatusBadge.style.color = 'var(--accent-light)';
+        engineStatusBadge.style.borderColor = 'var(--accent-neon)';
+      }
+    }
+
+    btnPlayPause.addEventListener('click', togglePlay);
+
+    btnStop.addEventListener('click', () => {
+      isPlaying = false;
+      stopSynthLoop();
+      playIcon.innerHTML = '<path d="M8 5v14l11-7z"/>';
+      btnPlayPause.style.boxShadow = '';
+      seekPercent = 0;
+      updateSeekbarUI(0);
+      engineStatusBadge.textContent = '⏹ STOPPED';
+      engineStatusBadge.style.color = '#777c88';
+      engineStatusBadge.style.borderColor = '#444855';
+    });
+
+    // Seekbar Logic
+    const seekbarTrench = document.getElementById('seekbarTrench');
+    const seekFill = document.getElementById('seekFill');
+    const seekThumb = document.getElementById('seekThumb');
+    const seekTooltip = document.getElementById('seekTooltip');
+
+    function updateSeekbarUI(pct) {
+      seekPercent = Math.max(0, Math.min(100, pct));
+      seekFill.style.width = `${seekPercent}%`;
+      seekThumb.style.left = `${seekPercent}%`;
+      seekTooltip.style.left = `${seekPercent}%`;
+      seekTooltip.textContent = `${Math.round(seekPercent)}%`;
+
+      if (uploadedAudio && uploadedAudio.duration) {
+        uploadedAudio.currentTime = (seekPercent / 100) * uploadedAudio.duration;
+      }
+    }
+
+    seekbarTrench.addEventListener('click', (e) => {
+      const rect = seekbarTrench.getBoundingClientRect();
+      const pct = ((e.clientX - rect.left) / rect.width) * 100;
+      updateSeekbarUI(pct);
+    });
+
+    // Power Buttons Toggle
+    const powerOffBtn = document.getElementById('powerOffBtn');
+    const powerOnBtn = document.getElementById('powerOnBtn');
+
+    powerOffBtn.addEventListener('click', () => {
+      powerOffBtn.classList.add('active');
+      powerOnBtn.classList.remove('active');
+      if (isPlaying) togglePlay();
+      if (masterGain && audioCtx) masterGain.gain.setValueAtTime(0, audioCtx.currentTime);
+      engineStatusBadge.textContent = 'STANDBY';
+      engineStatusBadge.style.color = '#555';
+    });
+
+    powerOnBtn.addEventListener('click', () => {
+      powerOnBtn.classList.add('active');
+      powerOffBtn.classList.remove('active');
+      if (masterGain && audioCtx) masterGain.gain.setValueAtTime(volumeValue, audioCtx.currentTime);
+      engineStatusBadge.textContent = '● 3D STEREO ACTIVE';
+      engineStatusBadge.style.color = 'var(--accent-light)';
+    });
+
+    // Mini Toggles (Bass Boost & 3D Spatial)
+    const toggleBass = document.getElementById('toggleBass');
+    toggleBass.addEventListener('click', () => {
+      initAudio();
+      isBassBoost = !isBassBoost;
+      toggleBass.classList.toggle('active', isBassBoost);
+      if (bassFilter && audioCtx) {
+        bassFilter.gain.setValueAtTime(isBassBoost ? 12 : 0, audioCtx.currentTime);
+      }
+    });
+
+    if (toggleStereo) {
+      toggleStereo.addEventListener('click', () => {
+        initAudio();
+        if (is8DActive) {
+          stop8DAutoRotator();
+        } else {
+          start8DAutoRotator();
+        }
+      });
+    }
+
+    // Skip Buttons
+    document.getElementById('btnNext').addEventListener('click', () => {
+      seekPercent = (seekPercent + 15) % 100;
+      updateSeekbarUI(seekPercent);
+    });
+    document.getElementById('btnPrev').addEventListener('click', () => {
+      seekPercent = Math.max(0, seekPercent - 15);
+      updateSeekbarUI(seekPercent);
+    });
+    document.getElementById('miniNext').addEventListener('click', () => {
+      seekPercent = (seekPercent + 10) % 100;
+      updateSeekbarUI(seekPercent);
+    });
+    document.getElementById('miniPrev').addEventListener('click', () => {
+      seekPercent = Math.max(0, seekPercent - 10);
+      updateSeekbarUI(seekPercent);
+    });
+
+    // File upload handler
+    const srcUploadBtn = document.getElementById('srcUploadBtn');
+    const srcDemoBtn = document.getElementById('srcDemoBtn');
+    const audioFileInput = document.getElementById('audioFileInput');
+    const songTitle = document.getElementById('songTitle');
+    const songArtist = document.getElementById('songArtist');
+
+    srcUploadBtn.addEventListener('click', () => audioFileInput.click());
+
+    audioFileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      initAudio();
+      stopSynthLoop();
+
+      const url = URL.createObjectURL(file);
+      if (!uploadedAudio) {
+        uploadedAudio = new Audio();
+        uploadedSourceNode = audioCtx.createMediaElementSource(uploadedAudio);
+        uploadedSourceNode.connect(bassFilter);
+      }
+      uploadedAudio.src = url;
+      uploadedAudio.play();
+      isPlaying = true;
+
+      songTitle.textContent = file.name.replace(/\.[^/.]+$/, "");
+      songArtist.textContent = "Local Audio File • Master Stereo Panned";
+      srcUploadBtn.classList.add('active');
+      srcDemoBtn.classList.remove('active');
+      playIcon.innerHTML = '<path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/>';
+    });
+
+    srcDemoBtn.addEventListener('click', () => {
+      initAudio();
+      if (uploadedAudio) uploadedAudio.pause();
+      srcDemoBtn.classList.add('active');
+      srcUploadBtn.classList.remove('active');
+      songTitle.textContent = "CyberShield Studio • 8D Synth Groove";
+      songArtist.textContent = "Stereo Panning Engine • 24/7 Live WebVC";
+      if (!isPlaying) togglePlay();
+    });
+
+    // VU Meter Animation
+    const vuBars = document.querySelectorAll('.vu-bar');
+    function animateVuMeter() {
+      vuBars.forEach(bar => {
+        const h = Math.floor(Math.random() * 20) + 4;
+        bar.style.height = `${h}px`;
+      });
+    }
+    function resetVuMeter() {
+      vuBars.forEach(bar => bar.style.height = '4px');
+    }
+
+    // Initialize UI default values
+    updatePanUI(0.0);
+    updateVolumeUI(70);
+    updateSeekbarUI(70);
+    start8DAutoRotator();
+  </script>
+</body>
+</html>

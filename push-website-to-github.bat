@@ -3,11 +3,16 @@ cd /d "%~dp0"
 title Push Bot-Hosting Platform Website to GitHub
 
 echo ========================================================
-echo   Pushing Bot-Hosting Website Platform to GitHub:
-echo   User: a1gamingyt82-cpu
+echo   Pushing Complete Bot-Hosting Platform to GitHub:
 echo   Repo: https://github.com/a1gamingyt82-cpu/VG-CyberShield
 echo ========================================================
 echo.
+
+:: 1. Remove nested .git inside storage so Git commits everything cleanly
+if exist "storage\bot-mvu4vwnf-mkkl\.git" (
+    echo Cleaning nested git folder...
+    rmdir /s /q "storage\bot-mvu4vwnf-mkkl\.git" >nul 2>&1
+)
 
 git init
 git config user.name "a1gamingyt82-cpu"
@@ -19,18 +24,21 @@ git remote remove origin >nul 2>&1
 git remote add origin https://a1gamingyt82-cpu@github.com/a1gamingyt82-cpu/VG-CyberShield.git
 git branch -M main
 
-echo 1. Staging files (server.js, public, supervisor, etc)...
+:: Clear cached submodule if any
+git rm --cached -r -f storage/bot-mvu4vwnf-mkkl >nul 2>&1
+
+echo 1. Staging all files and packages...
 git add -A
 
-echo 2. Committing website files...
-git commit -m "feat: full bot-hosting web platform with live dashboard and supervisor"
+echo 2. Committing changes...
+git commit -m "feat: full bot-hosting web platform with node_modules dependencies"
 
 echo.
-echo 3. Pushing to GitHub...
+echo 3. Pushing to GitHub (origin main)...
 git push -u origin main --force
 
 echo.
 echo ========================================================
-echo   Check your GitHub: https://github.com/a1gamingyt82-cpu/VG-CyberShield
+echo   SUCCESS! Pura platform GitHub par upload ho gaya!
 echo ========================================================
 pause

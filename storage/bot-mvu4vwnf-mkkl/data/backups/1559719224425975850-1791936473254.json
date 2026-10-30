@@ -1,0 +1,68 @@
+{
+  "guildId": "1559719224425975850",
+  "name": "𝗩𝗚 ✘𝗖𝗛𝗘𝗔𝗧𝗦😈's server",
+  "createdAt": "2026-10-14T00:07:53.252Z",
+  "roles": [],
+  "channels": [
+    {
+      "name": "Text Channels",
+      "type": 4,
+      "topic": null,
+      "nsfw": false,
+      "bitrate": null,
+      "userLimit": null,
+      "parentName": null,
+      "position": 0
+    },
+    {
+      "name": "general",
+      "type": 0,
+      "topic": null,
+      "nsfw": false,
+      "bitrate": null,
+      "userLimit": null,
+      "parentName": "Text Channels",
+      "position": 0
+    },
+    {
+      "name": "clips-and-highlights",
+      "type": 0,
+      "topic": null,
+      "nsfw": false,
+      "bitrate": null,
+      "userLimit": null,
+      "parentName": "Text Channels",
+      "position": 1
+    },
+    {
+      "name": "Voice Channels",
+      "type": 4,
+      "topic": null,
+      "nsfw": false,
+      "bitrate": null,
+      "userLimit": null,
+      "parentName": null,
+      "position": 1
+    },
+    {
+      "name": "Lobby",
+      "type": 2,
+      "topic": null,
+      "nsfw": false,
+      "bitrate": 64000,
+      "userLimit": 0,
+      "parentName": "Voice Channels",
+      "position": 0
+    },
+    {
+      "name": "Gaming",
+      "type": 2,
+      "topic": null,
+      "nsfw": false,
+      "bitrate": 64000,
+      "userLimit": 0,
+      "parentName": "Voice Channels",
+      "position": 1
+    }
+  ]
+}
