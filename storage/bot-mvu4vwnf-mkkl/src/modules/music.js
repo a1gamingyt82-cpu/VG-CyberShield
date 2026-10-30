@@ -574,18 +574,6 @@ async function getSCClientId() {
   return 'xk6BGxLCsQJ5Ss0bH6sRdsZhts3gTNaU';
 }
 
-function fetchJsonHttps(url) {
-  return new Promise((resolve) => {
-    https.get(url, { headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)' } }, (res) => {
-      let d = '';
-      res.on('data', c => d += c);
-      res.on('end', () => {
-        try { resolve(JSON.parse(d)); } catch { resolve(null); }
-      });
-    }).on('error', () => resolve(null));
-  });
-}
-
 const BASS_AUDIO_FILTER = 'equalizer=f=60:width_type=o:width=1.5:gain=5.0,equalizer=f=120:width_type=o:width=1.2:gain=3.5,volume=1.3,alimiter=limit=0.98';
 
 function cleanTitleForSearch(title) {
