@@ -4,6 +4,71 @@ const { EmbedBuilder, PermissionsBitField, ActionRowBuilder, ButtonBuilder, Butt
 const { getGuild, saveGuild } = require('../store');
 const { isAdmin } = require('./helpers');
 const https = require('https');
+const zlib = require('zlib');
+
+async function fetchJson(url) {
+  if (typeof fetch === 'function') {
+    try {
+      const ctrl = new AbortController();
+      const tm = setTimeout(() => ctrl.abort(), 6500);
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept': 'application/json, text/plain, */*'
+        },
+        signal: ctrl.signal
+      });
+      clearTimeout(tm);
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch (e) {}
+  }
+
+  return new Promise((resolve) => {
+    function req(targetUrl, depth = 0) {
+      if (depth > 5) return resolve(null);
+      try {
+        const r = https.get(targetUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'application/json, text/plain, */*',
+            'Accept-Encoding': 'gzip, deflate'
+          }
+        }, (res) => {
+          if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+            const redirectUrl = new URL(res.headers.location, targetUrl).toString();
+            return req(redirectUrl, depth + 1);
+          }
+
+          let stream = res;
+          const encoding = res.headers['content-encoding'];
+          if (encoding === 'gzip') {
+            stream = res.pipe(zlib.createGunzip());
+          } else if (encoding === 'deflate') {
+            stream = res.pipe(zlib.createInflate());
+          }
+
+          let d = '';
+          stream.on('data', c => d += c);
+          stream.on('end', () => {
+            try { resolve(JSON.parse(d)); } catch { resolve(null); }
+          });
+          stream.on('error', () => resolve(null));
+        });
+        r.on('error', () => resolve(null));
+        r.setTimeout(6500, () => {
+          r.destroy();
+          resolve(null);
+        });
+      } catch {
+        resolve(null);
+      }
+    }
+    req(url);
+  });
+}
+const fetchJsonHttps = fetchJson;
 
 let voice, ytdlClient, playdl, prism;
 try { voice = require('@discordjs/voice'); } catch { voice = null; }
@@ -256,35 +321,53 @@ function isSafePublicUrl(url) {
 // High-Speed Direct CDN Music Search (JioSaavn 320kbps - 100% Free, Zero Rate Limits, Full Bhojpuri & Bollywood Catalog)
 async function searchJioSaavnTrack(query) {
   if (!query) return null;
-  const cleanQ = query.replace(/[\[\(].*?[\]\)]/g, '').trim();
+  const cleanQ = query.replace(/[\[\(].*?[\]\)]/g, '').replace(/#[\w\u0900-\u097F]+/g, '').trim();
   const apis = [
-    `https://saavn.dev/api/search/songs?query=${encodeURIComponent(cleanQ)}&limit=5`,
-    `https://saavn.me/search/songs?query=${encodeURIComponent(cleanQ)}&limit=5`
+    `https://saavn.dev/api/search/songs?query=${encodeURIComponent(cleanQ)}&limit=10`,
+    `https://saavn.me/search/songs?query=${encodeURIComponent(cleanQ)}&limit=10`,
+    `https://jiosaavn-api-privatecvc2.vercel.app/search/songs?query=${encodeURIComponent(cleanQ)}&limit=10`
   ];
 
   for (const apiUrl of apis) {
     try {
-      const data = await fetchJsonHttps(apiUrl);
-      const results = data?.data?.results || data?.data || data?.results;
-      if (Array.isArray(results) && results.length > 0) {
-        const item = results[0];
-        const dlList = item.downloadUrl || [];
-        const dl = (Array.isArray(dlList) ? dlList.find(d => d.quality === '320kbps' || d.quality === '160kbps') || dlList[dlList.length - 1] : null)?.url || item.url;
-        const imgList = item.image || [];
-        const thumb = (Array.isArray(imgList) ? imgList[imgList.length - 1] : null)?.url || null;
-        const artist = item.artists?.primary?.[0]?.name || item.primaryArtists || 'Artist';
+      const data = await fetchJson(apiUrl);
+      const rawList = data?.data?.results || data?.data || data?.results;
+      const results = Array.isArray(rawList) ? rawList : (Array.isArray(data) ? data : []);
+      if (results.length > 0) {
+        for (const item of results) {
+          const dlList = item.downloadUrl || item.download_url || [];
+          let dl = null;
+          if (Array.isArray(dlList) && dlList.length > 0) {
+            dl = (
+              dlList.find(d => d.quality === '320kbps') ||
+              dlList.find(d => d.quality === '160kbps') ||
+              dlList.find(d => d.quality === '96kbps') ||
+              dlList[dlList.length - 1]
+            )?.url || (typeof dlList[0] === 'string' ? dlList[0] : null);
+          } else if (typeof dlList === 'string') {
+            dl = dlList;
+          } else if (item.media_preview_url) {
+            dl = item.media_preview_url;
+          } else if (item.url && item.url.includes('saavncdn')) {
+            dl = item.url;
+          }
 
-        if (dl && dl.startsWith('http')) {
-          return {
-            id: 'saavn_' + (item.id || Date.now()),
-            url: dl,
-            streamUrl: dl,
-            title: item.name || item.title || query,
-            duration: parseInt(item.duration) || 0,
-            thumbnail: thumb,
-            author: artist,
-            isDirectCdn: true
-          };
+          if (dl && typeof dl === 'string' && dl.startsWith('http')) {
+            const imgList = item.image || item.images || [];
+            const thumb = (Array.isArray(imgList) ? imgList[imgList.length - 1]?.url : null) || null;
+            const artist = item.artists?.primary?.[0]?.name || item.primaryArtists || item.artist || 'Artist';
+
+            return {
+              id: 'saavn_' + (item.id || Date.now()),
+              url: dl,
+              streamUrl: dl,
+              title: item.name || item.title || item.song || query,
+              duration: parseInt(item.duration) || 0,
+              thumbnail: thumb,
+              author: artist,
+              isDirectCdn: true
+            };
+          }
         }
       }
     } catch (e) {}
@@ -343,31 +426,7 @@ async function resolveTrack(query) {
     }
   } catch (sErr) {}
 
-  // Search keyword with ytdlClient
-  if (ytdlClient) {
-    try {
-      const results = await ytdlClient.search(query);
-      if (results && results.length > 0) {
-        // Find best non-live playable track first
-        const matched = results.find(r => !r.isLive && (r.lengthSeconds || 0) > 20) || results[0];
-        const vidId = matched.id || extractVideoId(matched.url);
-        const thumbs = matched.thumbnails || [];
-        const thumbUrl = thumbs.length ? thumbs[thumbs.length - 1].url : (vidId ? `https://i.ytimg.com/vi/${vidId}/hqdefault.jpg` : null);
-        return {
-          id: vidId,
-          url: matched.url,
-          title: matched.title,
-          duration: parseInt(matched.lengthSeconds) || 0,
-          thumbnail: thumbUrl,
-          author: matched.author?.name || 'YouTube Artist'
-        };
-      }
-    } catch (e) {
-      console.error('[ytdl search error]:', e.message);
-    }
-  }
-
-  // Tier 1: SoundCloud search (100% reliable on Cloud/Datacenter IPs, zero 429 blocks)
+  // Priority 2: SoundCloud search (100% reliable on Cloud/Datacenter IPs, zero 429 blocks)
   try {
     const scItem = await searchSoundCloudTrack(query);
     if (scItem) {
@@ -376,17 +435,6 @@ async function resolveTrack(query) {
     }
   } catch (scErr) {
     console.warn('[SoundCloud resolve error]:', scErr.message);
-  }
-
-  // Tier 2: YouTube fallback (handled safely without uncaught rejections)
-  try {
-    const fallback = await searchYouTubeFallback(query);
-    if (fallback) {
-      searchCache.set(qKey, fallback);
-      return fallback;
-    }
-  } catch (ytErr) {
-    console.warn('[YouTube search notice]:', ytErr.message);
   }
 
   return null;
@@ -689,9 +737,24 @@ function createFfmpegStream(streamUrl) {
     if (ffStatic && fs.existsSync(ffStatic)) ffmpegBin = ffStatic;
   } catch {}
 
-  const child = spawn(ffmpegBin, [
+  const isSaavn = streamUrl.includes('saavncdn') || streamUrl.includes('jiosaavn');
+  const isSC = streamUrl.includes('sndcdn') || streamUrl.includes('soundcloud');
+  const referer = isSaavn
+    ? 'Referer: https://www.jiosaavn.com/\r\n'
+    : (isSC ? 'Referer: https://soundcloud.com/\r\n' : '');
+
+  const args = [
     '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-    '-headers', 'Referer: https://soundcloud.com/\r\n',
+    '-reconnect', '1',
+    '-reconnect_streamed', '1',
+    '-reconnect_delay_max', '5'
+  ];
+
+  if (referer) {
+    args.push('-headers', referer);
+  }
+
+  args.push(
     '-nostdin',
     '-i', streamUrl,
     '-vn',
@@ -700,7 +763,9 @@ function createFfmpegStream(streamUrl) {
     '-ar', '48000',
     '-ac', '2',
     'pipe:1'
-  ], {
+  );
+
+  const child = spawn(ffmpegBin, args, {
     stdio: ['ignore', 'pipe', 'pipe'],
     windowsHide: true
   });
@@ -722,8 +787,8 @@ async function createAudioStreamResource(url, volume = 100, title = '', directSt
 
   const searchQuery = title || url;
 
-  // Tier 0: Direct 320kbps CDN Audio Stream (JioSaavn - 100% stable, zero 429/404, instant playback)
-  const targetCdnUrl = directStreamUrl?.includes('saavncdn.com') ? directStreamUrl : (url?.includes('saavncdn.com') ? url : null);
+  // Tier 0: Direct 320kbps CDN Audio Stream (JioSaavn / Direct CDN - 100% stable, zero 429/404, instant playback)
+  const targetCdnUrl = (directStreamUrl && /^https?:\/\//i.test(directStreamUrl)) ? directStreamUrl : (url && url.includes('saavncdn.com') ? url : null);
   if (targetCdnUrl) {
     try {
       console.log(`[High-Speed CDN Engine] Streaming: "${title || url}"`);
@@ -956,6 +1021,11 @@ async function fetchNextDifferentSong(Q) {
 // Reliable Queue Advance on Next / Skip: shifts old track, guarantees new track plays immediately
 async function advanceToNextSong(guild, channel, Q) {
   Q.isSkipping = true;
+  Q.currentRetryCount = 0;
+  if (Q.upNextTimer) {
+    clearTimeout(Q.upNextTimer);
+    Q.upNextTimer = null;
+  }
   if (Q.earlyTransitionTimer) {
     clearTimeout(Q.earlyTransitionTimer);
     Q.earlyTransitionTimer = null;
@@ -1073,7 +1143,34 @@ async function playNext(guild, channel) {
           return;
         }
 
+        // Clean up upNext countdown timer
+        if (Q.upNextTimer) {
+          clearTimeout(Q.upNextTimer);
+          Q.upNextTimer = null;
+        }
+
         const playedDuration = Date.now() - (Q.lastTrackStartTime || 0);
+        const currentSong = Q.songs[0];
+        const expectedDurationMs = (currentSong?.duration || 0) * 1000;
+
+        // Strict Natural Finish Check:
+        // A track only finishes naturally if it played at least 75% of its duration,
+        // or if duration is unknown and it played for at least 40 seconds.
+        const wasNaturalFinish = expectedDurationMs > 0
+          ? (playedDuration >= expectedDurationMs * 0.75 || playedDuration >= (expectedDurationMs - 6000))
+          : (playedDuration >= 40000);
+
+        // Premature Drop Protection: If stream disconnected early, DO NOT skip! Reconnect the same track!
+        if (!wasNaturalFinish && (Q.currentRetryCount || 0) < 3) {
+          Q.currentRetryCount = (Q.currentRetryCount || 0) + 1;
+          console.warn(`[Stream Guard] Track "${currentSong?.title}" dropped prematurely (${Math.round(playedDuration/1000)}s / ${Math.round(expectedDurationMs/1000)}s). Re-streaming same track without skipping... (Attempt ${Q.currentRetryCount}/3)`);
+          await new Promise(r => setTimeout(r, 1200));
+          Q.isProcessing = false;
+          return playNext(guild, channel);
+        }
+
+        // Song has finished naturally! Reset retry count
+        Q.currentRetryCount = 0;
         const finished = Q.songs[0];
         if (finished?.id) {
           Q.lastPlayedId = finished.id;
@@ -1093,24 +1190,9 @@ async function playNext(guild, channel) {
           Q.songs.shift();
         }
 
-        // Rapid failure protection: if track finished in under 2 seconds
-        if (playedDuration < 2000) {
-          Q.consecutiveFails = (Q.consecutiveFails || 0) + 1;
-          if (Q.consecutiveFails >= 5) {
-            console.warn('[Playback Guard] 5 consecutive tracks failed. Pausing to protect CPU.');
-            Q.playing = false;
-            Q.consecutiveFails = 0;
-            return;
-          }
-          await new Promise(r => setTimeout(r, 1000));
-        } else {
-          Q.consecutiveFails = 0;
-        }
-
         // Auto-continue playback seamlessly ONLY when current song has naturally finished playing to end
-        const wasNaturalFinish = playedDuration >= 12000 || (finished?.duration && playedDuration >= (finished.duration * 1000 * 0.7));
-        if (Q.songs.length === 0 && (wasNaturalFinish || Q.stay247)) {
-          console.log('[Auto-Play Engine] Song finished naturally. Smoothly blending next ad-free track...');
+        if (Q.songs.length === 0 && (Q.autoplay !== false || Q.stay247)) {
+          console.log('[Auto-Play Engine] Song finished naturally. Smoothly blending next ad-free cloud track...');
           const autoSong = await fetchNextDifferentSong(Q);
           if (autoSong) {
             Q.songs.push(autoSong);
@@ -1161,22 +1243,73 @@ async function playNext(guild, channel) {
     Q.player.play(resource);
     Q.playing = true;
 
+    // Clean up any old upcoming timer
+    if (Q.upNextTimer) {
+      clearTimeout(Q.upNextTimer);
+      Q.upNextTimer = null;
+    }
+
+    // 5-Second DJ Crossfade Alert: 5s before song finishes, notify channel with upcoming song title
+    const songDurationSec = next.duration || 180;
+    if (songDurationSec > 12) {
+      const alertTimeMs = Math.max(5000, (songDurationSec - 5) * 1000);
+      Q.upNextTimer = setTimeout(async () => {
+        try {
+          if (!Q.playing || Q.songs[0]?.id !== next.id) return;
+
+          let upcoming = Q.songs[1];
+          if (!upcoming && (Q.autoplay !== false || Q.stay247)) {
+            upcoming = await fetchNextDifferentSong(Q);
+            if (upcoming && Q.songs.length === 1) {
+              Q.songs.push(upcoming);
+            }
+          }
+
+          if (upcoming && channel) {
+            const upTitle = cleanTitle(upcoming.title || 'Next Audio Track');
+            const upEmbed = new EmbedBuilder()
+              .setColor(0x5865f2)
+              .setAuthor({
+                name: '⏳ [ 𝟓 𝐒𝐞𝐜𝐨𝐧𝐝𝐬 𝐋𝐞𝐟𝐭 — 𝐄𝐧𝐝𝐢𝐧𝐠 𝐒𝐨𝐨𝐧 ]',
+                iconURL: 'https://cdn.discordapp.com/emojis/1551154653201440828.gif'
+              })
+              .setDescription(
+                `<a:joya:1551393231642829001> **Up Next :** \`${upTitle.slice(0, 100)}\`\n` +
+                `🎧 *Zero-Ad Stream Pre-Buffered in DDR6 RAM & Ready to Blend...*`
+              );
+
+            const alertMsg = await channel.send({ embeds: [upEmbed] }).catch(() => null);
+            if (alertMsg) {
+              setTimeout(() => alertMsg.delete().catch(() => {}), 11000);
+            }
+          }
+        } catch (e) {}
+      }, alertTimeMs);
+    }
+
     // Zero-Buffering Pipeline: Pre-resolve the next song in the background while current song plays
     setTimeout(async () => {
       try {
         let upcoming = Q.songs[1];
-        if (!upcoming && (Q.autoplay === true || Q.stay247)) {
+        if (!upcoming && (Q.autoplay !== false || Q.stay247)) {
           upcoming = await fetchNextDifferentSong(Q);
           if (upcoming && Q.songs.length === 1) {
             Q.songs.push(upcoming);
           }
         }
         if (upcoming && !upcoming.streamUrl) {
-          const res = await getSoundCloudAudioUrl(upcoming.title || upcoming.url);
-          if (res?.url) {
-            upcoming.streamUrl = res.url;
-            upcoming.streamTitle = res.title;
-            console.log(`[Zero-Buffering Pre-fetch] Pre-cached next stream: "${res.title}"`);
+          const saavnRes = await searchJioSaavnTrack(upcoming.title || upcoming.url);
+          if (saavnRes?.streamUrl) {
+            upcoming.streamUrl = saavnRes.streamUrl;
+            upcoming.streamTitle = saavnRes.title;
+            console.log(`[Zero-Buffering Pre-fetch] Pre-cached JioSaavn 320k stream: "${saavnRes.title}"`);
+          } else {
+            const res = await getSoundCloudAudioUrl(upcoming.title || upcoming.url);
+            if (res?.url) {
+              upcoming.streamUrl = res.url;
+              upcoming.streamTitle = res.title;
+              console.log(`[Zero-Buffering Pre-fetch] Pre-cached SoundCloud stream: "${res.title}"`);
+            }
           }
         }
       } catch (e) {}
