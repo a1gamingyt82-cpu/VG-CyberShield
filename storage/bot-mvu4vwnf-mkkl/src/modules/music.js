@@ -316,14 +316,7 @@ async function resolveTrack(query) {
     }
   }
 
-  // Fallback search: YouTube fallback
-  const fallback = await searchYouTubeFallback(query);
-  if (fallback) {
-    searchCache.set(qKey, fallback);
-    return fallback;
-  }
-
-  // Tier 2 Fallback: SoundCloud search (100% reliable on datacenter IPs)
+  // Tier 1: SoundCloud search (100% reliable on Cloud/Datacenter IPs, zero 429 blocks)
   try {
     const scItem = await searchSoundCloudTrack(query);
     if (scItem) {
@@ -332,6 +325,17 @@ async function resolveTrack(query) {
     }
   } catch (scErr) {
     console.warn('[SoundCloud resolve error]:', scErr.message);
+  }
+
+  // Tier 2: YouTube fallback (handled safely without uncaught rejections)
+  try {
+    const fallback = await searchYouTubeFallback(query);
+    if (fallback) {
+      searchCache.set(qKey, fallback);
+      return fallback;
+    }
+  } catch (ytErr) {
+    console.warn('[YouTube search notice]:', ytErr.message);
   }
 
   return null;
@@ -625,24 +629,12 @@ async function getSoundCloudAudioUrl(query) {
 function createFfmpegStream(streamUrl) {
   const ffmpeg = new prism.FFmpeg({
     args: [
-      '-analyzeduration', '0',
-      '-probesize', '32768',
-      '-fflags', '+nobuffer+discardcorrupt+fastseek',
-      '-flags', 'low_delay',
-      '-thread_queue_size', '8192',
       '-reconnect', '1',
       '-reconnect_streamed', '1',
-      '-reconnect_on_network_error', '1',
-      '-reconnect_on_http_error', '4xx,5xx',
-      '-reconnect_delay_max', '2',
-      '-rw_timeout', '15000000',
-      '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      '-protocol_whitelist', 'file,http,https,tcp,tls,crypto,data,hls,applehttp,pipe,subfile',
-      '-tls_verify', '0',
+      '-reconnect_delay_max', '5',
       '-nostdin',
       '-i', streamUrl,
       '-vn',
-      '-c:a', 'pcm_s16le',
       '-f', 's16le',
       '-ar', '48000',
       '-ac', '2'
@@ -650,10 +642,13 @@ function createFfmpegStream(streamUrl) {
   });
   if (ffmpeg.process) {
     ffmpeg.process.on('error', (err) => console.warn('[FFmpeg Process Error]:', err.message));
+    ffmpeg.process.on('close', (code) => {
+      if (code !== 0 && code !== null) console.warn('[FFmpeg Exit Code]:', code);
+    });
     ffmpeg.process.stderr?.on('data', (d) => {
       const msg = d.toString().trim();
-      if (msg.toLowerCase().includes('error') || msg.toLowerCase().includes('failed') || msg.includes('403') || msg.includes('whitelist') || msg.includes('Invalid')) {
-        console.warn('[FFmpeg Stderr Error]:', msg);
+      if (msg.includes('Error') || msg.includes('failed') || msg.includes('403') || msg.includes('Invalid')) {
+        console.warn('[FFmpeg Stderr]:', msg.slice(0, 160));
       }
     });
   }
