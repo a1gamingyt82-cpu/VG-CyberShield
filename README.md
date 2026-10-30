@@ -1,3 +1,13 @@
+---
+title: VG CyberShield Bot Hosting
+emoji: 🛡️
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+pinned: false
+---
+
 # 🛡️ BotShield 24/7 — Discord Bot Hosting Platform
 
 **BotShield 24/7** ek enterprise-grade, high-performance Discord Bot Hosting platform hai jo aapke Discord bots ko **24/7 online** rakhta hai, **unlimited hardware allocation (CPU, GPU, RAM)** provide karta hai, aur **military-grade zero-trust security** se fortified hai taaki koi bhi hacker host system ko compromise ya bypass na kar sake.
