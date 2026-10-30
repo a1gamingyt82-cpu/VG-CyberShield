@@ -945,22 +945,105 @@ function createFfmpegStream(streamUrl) {
   return child.stdout;
 }
 
-// Resilient Audio Resource Creator (Prism OggOpus First -> Raw PCM Fallback)
+// Low-latency, direct Node.js HTTPS stream reader with full browser spoofing
+function fetchAudioStreamHttps(mediaUrl) {
+  const { PassThrough } = require('stream');
+  const pass = new PassThrough({ highWaterMark: 1024 * 1024 });
+  const client = mediaUrl.startsWith('http://') ? http : https;
+
+  function doReq(targetUrl, depth = 0) {
+    if (depth > 6) {
+      pass.destroy(new Error('Too many redirects'));
+      return;
+    }
+    try {
+      const parsed = new URL(targetUrl);
+      const isSoundCloud = parsed.hostname.includes('sndcdn.com');
+      const reqHeaders = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': '*/*',
+        'Accept-Encoding': 'identity',
+        'Range': 'bytes=0-'
+      };
+      if (isSoundCloud) {
+        reqHeaders['Referer'] = 'https://soundcloud.com/';
+        reqHeaders['Origin'] = 'https://soundcloud.com';
+      }
+
+      const req = client.get(targetUrl, { headers: reqHeaders }, (res) => {
+        if ([301, 302, 303, 307, 308].includes(res.statusCode) && res.headers.location) {
+          const redirectUrl = new URL(res.headers.location, targetUrl).toString();
+          return doReq(redirectUrl, depth + 1);
+        }
+
+        if (res.statusCode !== 200 && res.statusCode !== 206) {
+          console.warn(`[Audio Stream HTTP] Status ${res.statusCode} from ${parsed.hostname}`);
+          pass.destroy(new Error(`HTTP ${res.statusCode}`));
+          return;
+        }
+
+        console.log(`✅ [Audio Stream Connected] HTTP ${res.statusCode} from ${parsed.hostname} (${res.headers['content-type'] || 'audio'})`);
+        res.pipe(pass);
+      });
+
+      req.on('error', (err) => {
+        console.warn('[Audio Stream Req Error]:', err.message);
+        pass.destroy(err);
+      });
+
+      req.setTimeout(15000, () => {
+        req.destroy();
+        pass.destroy(new Error('Audio stream timeout (15s)'));
+      });
+    } catch (e) {
+      pass.destroy(e);
+    }
+  }
+
+  doReq(mediaUrl);
+  return pass;
+}
+
+// Resilient Audio Resource Creator (Node HTTPS Stdin Pipe -> Prism OggOpus)
 function createAudioStreamResourceFromUrl(streamUrl) {
   if (!voice) return null;
   const isHls = typeof streamUrl === 'string' && (streamUrl.includes('.m3u8') || streamUrl.includes('/hls'));
 
-  // Priority 1: High-Speed Native OggOpus using prism-media (0 Node CPU transcoding)
+  // Priority 1: High-Speed Native OggOpus using prism-media with stdin piping (bypasses all FFmpeg network restrictions)
   if (prism) {
     try {
+      const isDirectFile = !isHls && typeof streamUrl === 'string' && streamUrl.startsWith('http');
+
+      if (isDirectFile) {
+        const audioPass = fetchAudioStreamHttps(streamUrl);
+        const ffmpeg = new prism.FFmpeg({
+          args: [
+            '-loglevel', 'error',
+            '-i', 'pipe:0',
+            '-analyzeduration', '0',
+            '-vn',
+            '-c:a', 'libopus',
+            '-b:a', '192k',
+            '-ar', '48000',
+            '-ac', '2',
+            '-application', 'audio',
+            '-f', 'ogg'
+          ]
+        });
+        audioPass.pipe(ffmpeg);
+        ffmpeg.on('error', (err) => {
+          if (!err.message?.includes('Premature close')) console.warn('[Prism Pipe error]:', err.message);
+        });
+        return voice.createAudioResource(ffmpeg, {
+          inputType: voice.StreamType.OggOpus,
+          inlineVolume: false
+        });
+      }
+
+      // HLS stream (.m3u8) fallback
       const args = [
         '-loglevel', 'error',
-        '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      ];
-      if (!isHls) {
-        args.push('-reconnect', '1', '-reconnect_streamed', '1', '-reconnect_delay_max', '5');
-      }
-      args.push(
+        '-user_agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         '-i', streamUrl,
         '-analyzeduration', '0',
         '-vn',
@@ -970,7 +1053,7 @@ function createAudioStreamResourceFromUrl(streamUrl) {
         '-ac', '2',
         '-application', 'audio',
         '-f', 'ogg'
-      );
+      ];
       const ff = new prism.FFmpeg({ args });
       ff.on('error', (err) => {
         if (!err.message?.includes('Premature close')) console.warn('[Prism FFmpeg error]:', err.message);
