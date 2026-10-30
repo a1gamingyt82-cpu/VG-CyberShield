@@ -215,10 +215,10 @@ async function ensureVoiceConnection(guild, vc, Q) {
     conn.subscribe(Q.player);
   }
 
-  // Fast wait for Ready state (3s timeout so it connects fast without delay)
+  // Fast and resilient wait for Ready state (15s timeout for cloud networks)
   if (conn.state.status !== voice.VoiceConnectionStatus.Ready && conn.state.status !== voice.VoiceConnectionStatus.Destroyed) {
     try {
-      await voice.entersState(conn, voice.VoiceConnectionStatus.Ready, 3_000);
+      await voice.entersState(conn, voice.VoiceConnectionStatus.Ready, 15_000);
     } catch (readyErr) {
       console.warn('[ensureVoiceConnection entersState timeout]:', readyErr.message);
     }
@@ -1340,7 +1340,7 @@ async function playNext(guild, channel) {
 
     if (conn && conn.state.status !== voice.VoiceConnectionStatus.Ready && conn.state.status !== voice.VoiceConnectionStatus.Destroyed) {
       try {
-        await voice.entersState(conn, voice.VoiceConnectionStatus.Ready, 5_000);
+        await voice.entersState(conn, voice.VoiceConnectionStatus.Ready, 15_000);
       } catch {}
     }
 

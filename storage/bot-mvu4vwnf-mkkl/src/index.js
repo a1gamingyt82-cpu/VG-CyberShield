@@ -18,7 +18,8 @@ const voiceMod = require('./modules/voice');
 const welcomeMod = require('./modules/welcome');
 const premiumMod = require('./modules/premium');
 
-if (!process.env.TOKEN || process.env.TOKEN.includes('PASTE')) {
+const initialToken = process.env.TOKEN || process.env.DISCORD_TOKEN || process.env.BACKUP_TOKEN;
+if (!initialToken || initialToken.includes('PASTE')) {
   console.log('❌ Put your TOKEN in .env first! (see .env.example)');
   process.exit(1);
 }
@@ -50,10 +51,8 @@ client.on('error', (err) => console.error('🛡️ [Primary Bot Error]:', err?.m
 
 client.once(Events.ClientReady, async (c) => {
   console.log(`✅ Login: ${c.user.tag} | ${c.guilds.cache.size} servers`);
-  console.log(`⚡ [Hardware Engine] DDR6 64GB Extreme RAM Active | AMD EPYC™ 64-Core Cluster (5.4 GHz)`);
-  console.log(`🚀 [Voice Subsystem] Zero-Buffering Audio Engine Active | libuv Worker Threads: 64`);
   try {
-    const rest = new REST().setToken(process.env.TOKEN);
+    const rest = new REST().setToken(c.token || process.env.TOKEN);
     await rest.put(Routes.applicationCommands(c.user.id), { body: commands });
     console.log('✅ Slash commands registered.');
   } catch (e) { console.log('⚠️ Command register fail:', e.message); }
@@ -811,9 +810,6 @@ try {
 
   // Anti-Slowloris Socket Protection (10s timeout)
   server.setTimeout(10000);
-  server.on('error', (err) => {
-    // Port already used by master server.js dashboard - safe to ignore
-  });
   server.listen(port, () => console.log(`💓 Web Controller: http://localhost:${port}/controller | Health: http://localhost:${port}/health`));
 
   // 24/7 Autonomous Self-KeepAlive Loop
@@ -825,31 +821,56 @@ try {
   }, 2 * 60 * 1000);
 } catch (e) { console.log('health server fail:', e.message); }
 
-// ---- BACKUP BOT (2nd token = watchdog; 1st ka token reset/dead ho to ye pakdega) ----
-if (process.env.BACKUP_TOKEN && !process.env.BACKUP_TOKEN.includes('PASTE')) {
-  try {
-    const watchdog = new Client({
-      intents: [
-        GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers,
-        GatewayIntentBits.GuildBans, GatewayIntentBits.GuildEmojisAndStickers,
-        GatewayIntentBits.GuildWebhooks, GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates,
-        GatewayIntentBits.GuildInvites,
-      ],
-      partials: [Partials.GuildMember, Partials.Channel, Partials.Message],
-    });
-    watchdog.once(Events.ClientReady, (c) => console.log(`✅ Watchdog login: ${c.user.tag}`));
-    watchdog.on('error', (err) => console.log('🛡️ [Watchdog Error]:', err?.message || err));
-    require('./watchdog').attachWatchdog(watchdog, client);
-    watchdog.login(process.env.BACKUP_TOKEN).catch(e => console.log('watchdog login fail:', e.message));
-  } catch (e) { console.log('watchdog fail:', e.message); }
-}
+// Clean Primary Bot Connection & Fallback Management (Single-Session Protected)
+(async () => {
+  let primaryToken = process.env.TOKEN;
+  let loggedInToken = null;
+
+  // Try Primary Token first
+  if (primaryToken && primaryToken.length > 30 && !primaryToken.includes('PASTE')) {
+    try {
+      await client.login(primaryToken);
+      loggedInToken = primaryToken;
+      console.log('✅ [Primary Bot] Connected with TOKEN to Discord Gateway!');
+    } catch (err) {
+      console.warn(`⚠️ [Primary Token Invalid]: ${err.message}`);
+    }
+  }
+
+  // If Primary Token was invalid or failed, seamlessly fallback to BACKUP_TOKEN
+  if (!loggedInToken && process.env.BACKUP_TOKEN && process.env.BACKUP_TOKEN.length > 30 && !process.env.BACKUP_TOKEN.includes('PASTE')) {
+    try {
+      await client.login(process.env.BACKUP_TOKEN);
+      loggedInToken = process.env.BACKUP_TOKEN;
+      console.log('✅ [Primary Bot] Connected with BACKUP_TOKEN to Discord Gateway!');
+    } catch (err) {
+      console.error(`❌ [Backup Token Fail]: ${err.message}`);
+    }
+  }
+
+  // ONLY launch watchdog if primary token logged in AND backup token is a DIFFERENT valid token!
+  if (loggedInToken && loggedInToken === primaryToken && process.env.BACKUP_TOKEN && process.env.BACKUP_TOKEN !== primaryToken) {
+    try {
+      const watchdog = new Client({
+        intents: [
+          GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers,
+          GatewayIntentBits.GuildBans, GatewayIntentBits.GuildEmojisAndStickers,
+          GatewayIntentBits.GuildWebhooks, GatewayIntentBits.GuildMessages,
+          GatewayIntentBits.MessageContent, GatewayIntentBits.GuildVoiceStates,
+          GatewayIntentBits.GuildInvites,
+        ],
+        partials: [Partials.GuildMember, Partials.Channel, Partials.Message],
+      });
+      watchdog.once(Events.ClientReady, (c) => console.log(`✅ Watchdog login: ${c.user.tag}`));
+      watchdog.on('error', (err) => console.log('🛡️ [Watchdog Error]:', err?.message || err));
+      require('./watchdog').attachWatchdog(watchdog, client);
+      watchdog.login(process.env.BACKUP_TOKEN).catch(() => {});
+    } catch (e) {}
+  }
+})();
 
 client.on(Events.ShardDisconnect, (event, shardId) => {
-  console.warn(`🛡️ [Gateway Guard] Shard ${shardId} disconnected (code: ${event?.code}). Instant reconnecting...`);
-  setTimeout(() => {
-    try { client.login(process.env.TOKEN).catch(() => {}); } catch {}
-  }, 2000);
+  console.warn(`🛡️ [Gateway Guard] Shard ${shardId} disconnected (code: ${event?.code}). Auto-resuming...`);
 });
 
 client.on(Events.ShardReconnecting, (shardId) => {
@@ -859,41 +880,3 @@ client.on(Events.ShardReconnecting, (shardId) => {
 client.on(Events.ShardResume, (shardId, replayedEvents) => {
   console.log(`✅ [Gateway Guard] Shard ${shardId} resumed (${replayedEvents} events replayed).`);
 });
-
-// Resilient Primary Bot Auto-Login with Backup Token Fallback
-async function connectPrimaryBot() {
-  const candidates = [
-    process.env.TOKEN,
-    process.env.DISCORD_TOKEN,
-    process.env.BACKUP_TOKEN
-  ].filter(t => t && t.length > 30 && !t.includes('PASTE'));
-
-  for (const t of candidates) {
-    try {
-      await client.login(t);
-      return true;
-    } catch (err) {
-      console.warn(`⚠️ [Primary Token Try Fail]: ${err.message}`);
-    }
-  }
-  return false;
-}
-
-// Resilient Auto-Reconnect Watchdog: checks every 10 seconds to prevent bot going offline
-let isReconnecting = false;
-setInterval(async () => {
-  try {
-    const isOffline = !client.isReady() || !client.ws || client.ws.status === 5;
-    if (isOffline && !isReconnecting) {
-      isReconnecting = true;
-      console.log('🛡️ [KeepAlive] Gateway connection dropped, reconnecting bot now...');
-      const ok = await connectPrimaryBot();
-      isReconnecting = false;
-      if (ok) console.log('✅ [KeepAlive] Bot reconnected successfully!');
-    }
-  } catch {
-    isReconnecting = false;
-  }
-}, 10000);
-
-connectPrimaryBot();
