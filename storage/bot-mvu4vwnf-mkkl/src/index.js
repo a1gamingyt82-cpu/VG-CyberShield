@@ -860,19 +860,40 @@ client.on(Events.ShardResume, (shardId, replayedEvents) => {
   console.log(`✅ [Gateway Guard] Shard ${shardId} resumed (${replayedEvents} events replayed).`);
 });
 
+// Resilient Primary Bot Auto-Login with Backup Token Fallback
+async function connectPrimaryBot() {
+  const candidates = [
+    process.env.TOKEN,
+    process.env.DISCORD_TOKEN,
+    process.env.BACKUP_TOKEN
+  ].filter(t => t && t.length > 30 && !t.includes('PASTE'));
+
+  for (const t of candidates) {
+    try {
+      await client.login(t);
+      return true;
+    } catch (err) {
+      console.warn(`⚠️ [Primary Token Try Fail]: ${err.message}`);
+    }
+  }
+  return false;
+}
+
 // Resilient Auto-Reconnect Watchdog: checks every 10 seconds to prevent bot going offline
 let isReconnecting = false;
-setInterval(() => {
+setInterval(async () => {
   try {
     const isOffline = !client.isReady() || !client.ws || client.ws.status === 5;
     if (isOffline && !isReconnecting) {
       isReconnecting = true;
       console.log('🛡️ [KeepAlive] Gateway connection dropped, reconnecting bot now...');
-      client.login(process.env.TOKEN)
-        .then(() => { isReconnecting = false; console.log('✅ [KeepAlive] Bot reconnected successfully!'); })
-        .catch((err) => { isReconnecting = false; console.error('⚠️ [KeepAlive Reconnect Fail]:', err.message); });
+      const ok = await connectPrimaryBot();
+      isReconnecting = false;
+      if (ok) console.log('✅ [KeepAlive] Bot reconnected successfully!');
     }
-  } catch {}
+  } catch {
+    isReconnecting = false;
+  }
 }, 10000);
 
-client.login(process.env.TOKEN);
+connectPrimaryBot();
