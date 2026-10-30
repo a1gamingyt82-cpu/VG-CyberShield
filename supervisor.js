@@ -147,11 +147,16 @@ if (require('fs').existsSync(targetSrc)) {
             });
         }
 
-        // Global module paths so dependencies are always found
+        // Global module paths so dependencies are always found from container & root
+        const rootModules = path.join(__dirname, 'node_modules');
+        const cwdModules = path.join(process.cwd(), 'node_modules');
         const globalNodeModules = [
             path.join(botDir, 'node_modules'),
-            path.join(this.sandbox.baseStorageDir, 'bot-mvu4vwnf-mkkl', 'node_modules')
-        ].join(path.delimiter);
+            path.join(this.sandbox.baseStorageDir, 'bot-mvu4vwnf-mkkl', 'node_modules'),
+            rootModules,
+            cwdModules,
+            process.env.NODE_PATH || ''
+        ].filter(Boolean).join(path.delimiter);
 
         const isPython = targetEntry.endsWith('.py');
         const executable = isPython ? 'python' : 'node';
@@ -197,7 +202,8 @@ if (require('fs').existsSync(targetSrc)) {
         const procData = {
             process: child,
             logs: (this.processes.get(botId)?.logs || []).slice(-300),
-            manualStop: false
+            manualStop: false,
+            startedAt: Date.now()
         };
         this.processes.set(botId, procData);
 
@@ -220,11 +226,15 @@ if (require('fs').existsSync(targetSrc)) {
             const wasManual = active ? active.manualStop : false;
             this.appendLog(botId, `container@bot-hosting:~$ Server process closed (exit code: ${code})`);
 
+            const runDuration = Date.now() - (active?.startedAt || 0);
             if (!wasManual && bot.autoRestart247) {
                 bot.status = 'restarting';
                 bot.restartCount = (bot.restartCount || 0) + 1;
                 this.saveBots();
-                this.appendLog(botId, `container@bot-hosting:~$ [24/7 Watchdog ⚡] Reconnecting bot in 3s... (Never Goes Offline)`);
+
+                const delay = runDuration < 3000 ? 8000 : 3000;
+                this.appendLog(botId, `container@bot-hosting:~$ [24/7 Watchdog ⚡] Reconnecting bot in ${Math.round(delay / 1000)}s...`);
+
                 setTimeout(() => {
                     if (bot.autoRestart247 && !this.isBotRunning(botId)) {
                         try {
@@ -233,7 +243,7 @@ if (require('fs').existsSync(targetSrc)) {
                             this.appendLog(botId, `container@bot-hosting:~$ ❌ Auto-restart failed: ${reErr.message}`);
                         }
                     }
-                }, 3000);
+                }, delay);
             } else {
                 bot.status = 'stopped';
                 this.saveBots();

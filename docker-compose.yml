@@ -1,0 +1,24 @@
+version: '3.8'
+
+services:
+  botshield:
+    build: .
+    container_name: botshield-discord-host
+    restart: always
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./storage:/app/storage
+      - ./bots.json:/app/bots.json
+    environment:
+      - PORT=3000
+      - NODE_OPTIONS=--max-old-space-size=65536
+    # Hardware Configuration: UNLIMITED allocation (passthrough all host resources)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: cdi
+              count: all
+              capabilities: [gpu]
+
